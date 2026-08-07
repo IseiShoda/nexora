@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { Send, Sparkles } from "lucide-react";
 const stats = [
   { label: "Revenue", value: "€0", change: "No data yet" },
@@ -6,6 +9,23 @@ const stats = [
 ];
 
 export default function Home() {
+  const [message, setMessage] = useState("");
+const [response, setResponse] = useState("");
+async function sendMessage() {
+  const res = await fetch("http://localhost:3001/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      message,
+    }),
+  });
+
+  const data = await res.json();
+
+  setResponse(data.answer);
+}
   return (
     <main className="min-h-screen bg-[#08080a] text-white">
       <div className="mx-auto max-w-7xl px-6 py-8">
@@ -90,12 +110,17 @@ export default function Home() {
   <div className="mt-4 flex gap-3">
 
     <input
-      type="text"
+  type="text"
+  value={message}
+  onChange={(e) => setMessage(e.target.value)}
       placeholder="Demandez quelque chose à Nexora..."
       className="flex-1 rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm outline-none placeholder:text-zinc-600"
     />
 
-    <button className="flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-medium text-black">
+    <button
+  onClick={sendMessage}
+  className="flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-medium text-black"
+>
       <Send size={16}/>
       Envoyer
     </button>
@@ -107,6 +132,12 @@ export default function Home() {
         {/* Footer */}
         <footer className="mt-12 text-center text-xs text-zinc-700">
           Nexora · Building the future of intelligent business
+
+        {response && (
+  <div className="mt-4 rounded-xl bg-zinc-950 p-4 text-sm">
+    {response}
+  </div>
+)}
         </footer>
 
       </div>
