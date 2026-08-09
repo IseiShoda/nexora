@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { MemoryService } from '../../memory/services/memory.service';
+import { ContextService } from '../../context/services/context.service';
 import { IntentService } from '../intents/intent.service';
 import { BrainIntent } from '../intents/intent.interface';
 
@@ -8,11 +9,20 @@ export class BrainService {
   constructor(
     private readonly intentService: IntentService,
     private readonly memoryService: MemoryService,
+    private readonly contextService: ContextService,
   ) {}
 
-  async think(message: string): Promise<string> {
+  async think(
+    message: string,
+    conversationId: number,
+  ): Promise<string> {
     const detected =
       this.intentService.detect(message);
+
+    const context =
+      await this.contextService.getContext(
+        conversationId,
+      );
 
     switch (detected.intent) {
       case BrainIntent.GREETING:
@@ -28,7 +38,10 @@ export class BrainService {
         return this.handleUserProject();
 
       default:
-        return this.handleUnknown(message);
+        return this.handleContextualResponse(
+          message,
+          context,
+        );
     }
   }
 
@@ -62,7 +75,24 @@ export class BrainService {
     return `Ton projet actuel est ${project.value}. 🧠`;
   }
 
-  private handleUnknown(message: string): string {
+  private handleContextualResponse(
+    message: string,
+    context: any,
+  ): string {
+    const reference =
+      context.references.find(
+        (item: any) =>
+          item.resolvedTo !== null,
+      );
+
+    if (reference) {
+      return `Je comprends que "${reference.value}" fait référence à ${reference.resolvedTo}. 🧠`;
+    }
+
+    if (context.activeTopic) {
+      return `Je garde le contexte autour de "${context.activeTopic}". Tu viens de me dire : "${message}". 🧠`;
+    }
+
     return `J'ai bien reçu ton message : "${message}".`;
   }
 }

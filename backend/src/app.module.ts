@@ -4,12 +4,14 @@ import { AppService } from './app.service';
 import { ChatModule } from './chat/chat.module';
 import { MemoryModule } from './memory/memory.module';
 import { BrainModule } from './brain/brain.module';
+import { ContextModule } from './context/context.module';
 
 @Module({
   imports: [
     ChatModule,
     MemoryModule,
     BrainModule,
+    ContextModule,
   ],
 
   controllers: [

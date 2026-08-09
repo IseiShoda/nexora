@@ -47,22 +47,15 @@ export class ChatService {
       },
     });
 
-    const previousMessages =
-      await this.prisma.message.findMany({
-        where: {
-          conversationId: conversation.id,
-        },
-        orderBy: {
-          createdAt: 'asc',
-        },
-      });
-
     await this.memoryService.processMessage(
       message,
     );
 
     const answer =
-      await this.brainService.think(message);
+      await this.brainService.think(
+        message,
+        conversation.id,
+      );
 
     await this.prisma.message.create({
       data: {
