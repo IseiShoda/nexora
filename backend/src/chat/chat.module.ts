@@ -3,9 +3,13 @@ import { ChatController } from './chat.controller';
 import { ChatService } from './chat.service';
 import { PrismaService } from '../Prisma/prisma.service';
 import { MemoryModule } from '../memory/memory.module';
+import { BrainModule } from '../brain/brain.module';
 
 @Module({
-  imports: [MemoryModule],
+  imports: [
+    MemoryModule,
+    BrainModule,
+  ],
 
   controllers: [
     ChatController,
