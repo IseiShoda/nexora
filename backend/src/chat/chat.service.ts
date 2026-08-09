@@ -1,30 +1,48 @@
 import { Injectable } from '@nestjs/common';
-
-type Message = {
-  role: 'user' | 'nexora';
-  content: string;
-};
+import { PrismaService } from '../Prisma/prisma.service';
 
 @Injectable()
 export class ChatService {
-  private messages: Message[] = [];
+  constructor(private readonly prisma: PrismaService) {}
 
-  sendMessage(message: string) {
-    this.messages.push({
-      role: 'user',
-      content: message,
+  async sendMessage(message: string) {
+    const conversation = await this.prisma.conversation.create({
+      data: {
+        title: message.substring(0, 50),
+      },
+    });
+
+    await this.prisma.message.create({
+      data: {
+        role: 'user',
+        content: message,
+        conversationId: conversation.id,
+      },
     });
 
     const answer = this.generateResponse(message);
 
-    this.messages.push({
-      role: 'nexora',
-      content: answer,
+    await this.prisma.message.create({
+      data: {
+        role: 'nexora',
+        content: answer,
+        conversationId: conversation.id,
+      },
+    });
+
+    const history = await this.prisma.message.findMany({
+      where: {
+        conversationId: conversation.id,
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
     });
 
     return {
+      conversationId: conversation.id,
       answer,
-      history: this.messages,
+      history,
       timestamp: new Date().toISOString(),
     };
   }
@@ -44,13 +62,24 @@ export class ChatService {
     }
 
     if (lowerMessage.includes('que peux-tu faire')) {
-      return 'Je peux discuter avec vous, conserver le contexte de notre conversation et, progressivement, apprendre à comprendre votre entreprise.';
+      return 'Je peux discuter avec vous, mémoriser nos conversations et progressivement apprendre à comprendre votre entreprise.';
     }
 
-    return `J'ai bien reçu votre message : "${message}". Je suis encore en phase d'apprentissage, mais ma mémoire commence à fonctionner. 🧠`;
+    return `J'ai bien reçu votre message : "${message}". Cette conversation est maintenant mémorisée. 🧠`;
   }
 
-  getHistory() {
-    return this.messages;
+  async getHistory() {
+    return this.prisma.conversation.findMany({
+      include: {
+        messages: {
+          orderBy: {
+            createdAt: 'asc',
+          },
+        },
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+    });
   }
 }
