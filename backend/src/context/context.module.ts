@@ -21,8 +21,13 @@ import {
 import { RuleBasedRelevanceEvaluator } from './relevance/rule-based-relevance.evaluator';
 
 import { PrismaService } from '../Prisma/prisma.service';
+import { MemoryModule } from '../memory/memory.module';
 
 @Module({
+  imports: [
+    MemoryModule,
+  ],
+
   controllers: [
     ContextController,
   ],
@@ -30,7 +35,6 @@ import { PrismaService } from '../Prisma/prisma.service';
   providers: [
     ContextService,
     ContextRepository,
-
     EntityExtractor,
     TopicTracker,
     ReferenceResolver,
@@ -42,8 +46,7 @@ import { PrismaService } from '../Prisma/prisma.service';
 
     {
       provide: RELEVANCE_EVALUATOR,
-      useClass:
-        RuleBasedRelevanceEvaluator,
+      useClass: RuleBasedRelevanceEvaluator,
     },
 
     PrismaService,

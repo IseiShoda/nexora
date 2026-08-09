@@ -1,12 +1,23 @@
 import { Injectable } from '@nestjs/common';
+
 import { ContextRepository } from '../repositories/context.repository';
 import { EntityExtractor } from '../extractors/entity.extractor';
 import { TopicTracker } from '../trackers/topic.tracker';
 import { ReferenceResolver } from '../resolvers/reference.resolver';
 import { ContextScorer } from '../scoring/context.scorer';
 import { ActiveContextService } from '../state/active-context.service';
-import { ConversationContext } from '../interfaces/context.interface';
+
+import type {
+  ConversationContext,
+} from '../interfaces/context.interface';
+
 import { ContextRelevanceService } from '../relevance/context-relevance.service';
+
+import { MemoryService } from '../../memory/services/memory.service';
+
+import type {
+  ContextEntity,
+} from '../entities/entity.interface';
 
 @Injectable()
 export class ContextService {
@@ -18,7 +29,8 @@ export class ContextService {
     private readonly contextScorer: ContextScorer,
     private readonly activeContextService: ActiveContextService,
     private readonly contextRelevanceService:
-  ContextRelevanceService,
+      ContextRelevanceService,
+    private readonly memoryService: MemoryService,
   ) {}
 
   async getContext(
@@ -31,11 +43,50 @@ export class ContextService {
         limit,
       );
 
-    const entities =
+    /*
+     * 1. Entities provenant de la conversation
+     */
+    const messageEntities =
       this.entityExtractor.extract(
         messages,
       );
 
+    /*
+     * 2. Memories disponibles
+     */
+    const memories =
+      await this.memoryService.getAll();
+
+    /*
+     * 3. Transformation des memories
+     *    en entités utilisables par Context.
+     */
+    const memoryEntities: ContextEntity[] =
+      memories.map((memory) => ({
+        type: memory.key,
+        value: memory.value,
+        source: 'memory',
+        confidence: 1,
+      }));
+
+    /*
+     * 4. Fusion conversation + mémoire
+     */
+    const entities: ContextEntity[] = [
+      ...messageEntities,
+      ...memoryEntities.filter(
+        (memoryEntity) =>
+          !messageEntities.some(
+            (messageEntity) =>
+              messageEntity.value.toLowerCase() ===
+              memoryEntity.value.toLowerCase(),
+          ),
+      ),
+    ];
+
+    /*
+     * 5. Scoring
+     */
     const scoredEntities =
       this.contextScorer.scoreEntities(
         entities,
@@ -53,18 +104,32 @@ export class ContextService {
       );
     }
 
-    const relevance =
-      this.contextRelevanceService.evaluate(
-      messages[messages.length - 1]?.content ?? '',
-      entities,
+    const activeContext =
+      this.activeContextService.getActiveContext(
+        conversationId,
       );
 
+    /*
+     * 6. Relevance
+     */
+    const relevance =
+      this.contextRelevanceService.evaluate(
+        messages[messages.length - 1]?.content ?? '',
+        entities,
+      );
+
+    /*
+     * 7. Topic
+     */
     const activeTopic =
       this.topicTracker.detect(
         messages,
         entities,
       );
 
+    /*
+     * 8. References
+     */
     const references =
       this.referenceResolver.resolve(
         messages,
@@ -74,7 +139,8 @@ export class ContextService {
     return {
       conversationId,
       messages,
-      activeTopic,
+      activeTopic:
+        activeTopic ?? activeContext?.value ?? null,
       entities: scoredEntities.map(
         (item) => item.entity,
       ),
