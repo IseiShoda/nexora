@@ -4,6 +4,7 @@ import { EntityExtractor } from '../extractors/entity.extractor';
 import { TopicTracker } from '../trackers/topic.tracker';
 import { ReferenceResolver } from '../resolvers/reference.resolver';
 import { ContextScorer } from '../scoring/context.scorer';
+import { ActiveContextService } from '../state/active-context.service';
 import { ConversationContext } from '../interfaces/context.interface';
 
 @Injectable()
@@ -14,6 +15,7 @@ export class ContextService {
     private readonly topicTracker: TopicTracker,
     private readonly referenceResolver: ReferenceResolver,
     private readonly contextScorer: ContextScorer,
+    private readonly activeContextService: ActiveContextService,
   ) {}
 
   async getContext(
@@ -34,6 +36,23 @@ export class ContextService {
     const scoredEntities =
       this.contextScorer.scoreEntities(
         entities,
+      );
+
+    const bestEntity =
+      this.contextScorer.getBestEntity(
+        entities,
+      );
+
+    if (bestEntity) {
+      this.activeContextService.setActiveContext(
+        conversationId,
+        bestEntity,
+      );
+    }
+
+    const activeContext =
+      this.activeContextService.getActiveContext(
+        conversationId,
       );
 
     const activeTopic =
@@ -88,5 +107,14 @@ export class ContextService {
     return messages[
       messages.length - 1
     ];
+  }
+
+  getActiveContext(
+    conversationId: number,
+  ) {
+    return this.activeContextService
+      .getActiveContext(
+        conversationId,
+      );
   }
 }
