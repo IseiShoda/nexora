@@ -1,5 +1,6 @@
 import { ContextEntity } from '../entities/entity.interface';
 import { ContextReference } from '../references/reference.interface';
+import { ContextRelevanceResult } from '../relevance/relevance.interface';
 
 export interface ContextMessage {
   role: string;
@@ -16,4 +17,6 @@ export interface ConversationContext {
   entities: ContextEntity[];
 
   references: ContextReference[];
+
+  relevance: ContextRelevanceResult;
 }

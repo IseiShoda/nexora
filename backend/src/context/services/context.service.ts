@@ -6,6 +6,7 @@ import { ReferenceResolver } from '../resolvers/reference.resolver';
 import { ContextScorer } from '../scoring/context.scorer';
 import { ActiveContextService } from '../state/active-context.service';
 import { ConversationContext } from '../interfaces/context.interface';
+import { ContextRelevanceService } from '../relevance/context-relevance.service';
 
 @Injectable()
 export class ContextService {
@@ -16,6 +17,8 @@ export class ContextService {
     private readonly referenceResolver: ReferenceResolver,
     private readonly contextScorer: ContextScorer,
     private readonly activeContextService: ActiveContextService,
+    private readonly contextRelevanceService:
+  ContextRelevanceService,
   ) {}
 
   async getContext(
@@ -50,9 +53,10 @@ export class ContextService {
       );
     }
 
-    const activeContext =
-      this.activeContextService.getActiveContext(
-        conversationId,
+    const relevance =
+      this.contextRelevanceService.evaluate(
+      messages[messages.length - 1]?.content ?? '',
+      entities,
       );
 
     const activeTopic =
@@ -75,6 +79,7 @@ export class ContextService {
         (item) => item.entity,
       ),
       references,
+      relevance,
     };
   }
 
