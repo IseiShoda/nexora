@@ -49,3 +49,8 @@ export type Conversation = Prisma.ConversationModel
  * 
  */
 export type Message = Prisma.MessageModel
+/**
+ * Model UserMemory
+ * 
+ */
+export type UserMemory = Prisma.UserMemoryModel

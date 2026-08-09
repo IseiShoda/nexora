@@ -6,12 +6,26 @@ export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
   @Post()
-  sendMessage(@Body('message') message: string) {
-    return this.chatService.sendMessage(message);
+  async chat(
+    @Body()
+    body: {
+      message: string;
+      conversationId?: number | string;
+    },
+  ) {
+    const conversationId =
+      body.conversationId !== undefined
+        ? Number(body.conversationId)
+        : undefined;
+
+    return this.chatService.sendMessage(
+      body.message,
+      conversationId,
+    );
   }
 
   @Get('history')
-  getHistory() {
+  async getHistory() {
     return this.chatService.getHistory();
   }
 }

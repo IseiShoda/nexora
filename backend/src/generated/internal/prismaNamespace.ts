@@ -398,7 +398,8 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 export const ModelName = {
   Conversation: 'Conversation',
-  Message: 'Message'
+  Message: 'Message',
+  UserMemory: 'UserMemory'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -414,7 +415,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "conversation" | "message"
+    modelProps: "conversation" | "message" | "userMemory"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -566,6 +567,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    UserMemory: {
+      payload: Prisma.$UserMemoryPayload<ExtArgs>
+      fields: Prisma.UserMemoryFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.UserMemoryFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMemoryPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.UserMemoryFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMemoryPayload>
+        }
+        findFirst: {
+          args: Prisma.UserMemoryFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMemoryPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.UserMemoryFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMemoryPayload>
+        }
+        findMany: {
+          args: Prisma.UserMemoryFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMemoryPayload>[]
+        }
+        create: {
+          args: Prisma.UserMemoryCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMemoryPayload>
+        }
+        createMany: {
+          args: Prisma.UserMemoryCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.UserMemoryCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMemoryPayload>[]
+        }
+        delete: {
+          args: Prisma.UserMemoryDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMemoryPayload>
+        }
+        update: {
+          args: Prisma.UserMemoryUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMemoryPayload>
+        }
+        deleteMany: {
+          args: Prisma.UserMemoryDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.UserMemoryUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.UserMemoryUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMemoryPayload>[]
+        }
+        upsert: {
+          args: Prisma.UserMemoryUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMemoryPayload>
+        }
+        aggregate: {
+          args: Prisma.UserMemoryAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateUserMemory>
+        }
+        groupBy: {
+          args: Prisma.UserMemoryGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UserMemoryGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.UserMemoryCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UserMemoryCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -621,6 +696,17 @@ export const MessageScalarFieldEnum = {
 } as const
 
 export type MessageScalarFieldEnum = (typeof MessageScalarFieldEnum)[keyof typeof MessageScalarFieldEnum]
+
+
+export const UserMemoryScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  value: 'value',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UserMemoryScalarFieldEnum = (typeof UserMemoryScalarFieldEnum)[keyof typeof UserMemoryScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -825,6 +911,7 @@ export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaC
 export type GlobalOmitConfig = {
   conversation?: Prisma.ConversationOmit
   message?: Prisma.MessageOmit
+  userMemory?: Prisma.UserMemoryOmit
 }
 
 /* Types for Logging */
