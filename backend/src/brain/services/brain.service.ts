@@ -1,8 +1,18 @@
 import { Injectable } from '@nestjs/common';
+
 import { MemoryService } from '../../memory/services/memory.service';
 import { ContextService } from '../../context/services/context.service';
+
 import { IntentService } from '../intents/intent.service';
 import { BrainIntent } from '../intents/intent.interface';
+
+import {
+  BrainAction,
+} from '../decisions/brain-decision.interface';
+
+import {
+  BrainDecisionService,
+} from '../decisions/brain-decision.service';
 
 @Injectable()
 export class BrainService {
@@ -10,6 +20,7 @@ export class BrainService {
     private readonly intentService: IntentService,
     private readonly memoryService: MemoryService,
     private readonly contextService: ContextService,
+    private readonly decisionService: BrainDecisionService,
   ) {}
 
   async think(
@@ -24,7 +35,47 @@ export class BrainService {
         conversationId,
       );
 
-    switch (detected.intent) {
+    const decision =
+      this.decisionService.decide(
+        detected.intent,
+        detected.confidence,
+        context,
+      );
+
+    switch (decision.action) {
+      case BrainAction.ANSWER:
+        return this.handleIntent(
+          detected.intent,
+          message,
+          context,
+        );
+
+      case BrainAction.CONTINUE_CONTEXT:
+        return this.handleContextualResponse(
+          message,
+          context,
+        );
+
+      case BrainAction.ASK_CLARIFICATION:
+        return this.handleClarification(
+          message,
+          context,
+        );
+
+      default:
+        return this.handleContextualResponse(
+          message,
+          context,
+        );
+    }
+  }
+
+  private async handleIntent(
+    intent: BrainIntent,
+    message: string,
+    context: any,
+  ): Promise<string> {
+    switch (intent) {
       case BrainIntent.GREETING:
         return this.handleGreeting();
 
@@ -94,5 +145,16 @@ export class BrainService {
     }
 
     return `J'ai bien reçu ton message : "${message}".`;
+  }
+
+  private handleClarification(
+    message: string,
+    context: any,
+  ): string {
+    if (context.activeTopic) {
+      return `Je comprends que nous parlons de "${context.activeTopic}", mais j'ai besoin d'un peu plus de précision pour avancer.`;
+    }
+
+    return `Je veux bien avancer avec toi, mais peux-tu préciser ce que tu souhaites faire avec : "${message}" ?`;
   }
 }
