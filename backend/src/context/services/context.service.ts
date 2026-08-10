@@ -6,18 +6,12 @@ import { TopicTracker } from '../trackers/topic.tracker';
 import { ReferenceResolver } from '../resolvers/reference.resolver';
 import { ContextScorer } from '../scoring/context.scorer';
 import { ActiveContextService } from '../state/active-context.service';
-
-import type {
-  ConversationContext,
-} from '../interfaces/context.interface';
-
 import { ContextRelevanceService } from '../relevance/context-relevance.service';
 
-import { MemoryService } from '../../memory/services/memory.service';
+import type { ConversationContext } from '../interfaces/context.interface';
+import type { ContextEntity } from '../entities/entity.interface';
 
-import type {
-  ContextEntity,
-} from '../entities/entity.interface';
+import { MemoryService } from '../../memory/services/memory.service';
 
 @Injectable()
 export class ContextService {
@@ -28,8 +22,7 @@ export class ContextService {
     private readonly referenceResolver: ReferenceResolver,
     private readonly contextScorer: ContextScorer,
     private readonly activeContextService: ActiveContextService,
-    private readonly contextRelevanceService:
-      ContextRelevanceService,
+    private readonly contextRelevanceService: ContextRelevanceService,
     private readonly memoryService: MemoryService,
   ) {}
 
@@ -44,7 +37,8 @@ export class ContextService {
       );
 
     /*
-     * 1. Entities provenant de la conversation
+     * 1. Extraction des entités présentes
+     * directement dans la conversation.
      */
     const messageEntities =
       this.entityExtractor.extract(
@@ -52,46 +46,76 @@ export class ContextService {
       );
 
     /*
-     * 2. Memories disponibles
+     * 2. Récupération des informations
+     * persistantes pertinentes.
      */
-    const memories =
-      await this.memoryService.getAll();
+    const memoryEntities: ContextEntity[] = [];
 
-    /*
-     * 3. Transformation des memories
-     *    en entités utilisables par Context.
-     */
-    const memoryEntities: ContextEntity[] =
-      memories.map((memory) => ({
-        type: memory.key,
-        value: memory.value,
+    const currentProject =
+      await this.memoryService.getCurrentProject();
+
+    if (
+      currentProject &&
+      !messageEntities.some(
+        (entity) =>
+          entity.type === 'project' &&
+          entity.value.toLowerCase() ===
+            currentProject.toLowerCase(),
+      )
+    ) {
+      memoryEntities.push({
+        type: 'project',
+        value: this.formatProjectName(
+          currentProject,
+        ),
+        source: 'memory',
+        confidence: 0.9,
+      });
+    }
+
+    const userName =
+      await this.memoryService.getUserName();
+
+    if (
+      userName &&
+      !messageEntities.some(
+        (entity) =>
+          entity.type === 'name' &&
+          entity.value.toLowerCase() ===
+            userName.toLowerCase(),
+      )
+    ) {
+      memoryEntities.push({
+        type: 'name',
+        value: userName,
         source: 'memory',
         confidence: 1,
-      }));
+      });
+    }
 
     /*
-     * 4. Fusion conversation + mémoire
+     * 3. Fusion conversation + mémoire.
+     *
+     * La mémoire vient après les entités
+     * directement détectées afin de pouvoir
+     * représenter l'état persistant actuel.
      */
     const entities: ContextEntity[] = [
       ...messageEntities,
-      ...memoryEntities.filter(
-        (memoryEntity) =>
-          !messageEntities.some(
-            (messageEntity) =>
-              messageEntity.value.toLowerCase() ===
-              memoryEntity.value.toLowerCase(),
-          ),
-      ),
+      ...memoryEntities,
     ];
 
     /*
-     * 5. Scoring
+     * 4. Scoring.
      */
     const scoredEntities =
       this.contextScorer.scoreEntities(
         entities,
       );
 
+    /*
+     * 5. Meilleure entité.
+     */
     const bestEntity =
       this.contextScorer.getBestEntity(
         entities,
@@ -110,25 +134,38 @@ export class ContextService {
       );
 
     /*
-     * 6. Relevance
+     * 6. Pertinence du dernier message.
      */
+    const lastMessage =
+      messages[messages.length - 1]?.content ?? '';
+
     const relevance =
       this.contextRelevanceService.evaluate(
-        messages[messages.length - 1]?.content ?? '',
+        lastMessage,
         entities,
       );
 
     /*
-     * 7. Topic
+     * 7. Topic.
+     *
+     * Si un projet courant existe en mémoire,
+     * il devient prioritaire comme sujet actif.
      */
-    const activeTopic =
+    let activeTopic =
       this.topicTracker.detect(
         messages,
         entities,
       );
 
+    if (currentProject) {
+      activeTopic =
+        this.formatProjectName(
+          currentProject,
+        );
+    }
+
     /*
-     * 8. References
+     * 8. Résolution des références.
      */
     const references =
       this.referenceResolver.resolve(
@@ -139,8 +176,7 @@ export class ContextService {
     return {
       conversationId,
       messages,
-      activeTopic:
-        activeTopic ?? activeContext?.value ?? null,
+      activeTopic,
       entities: scoredEntities.map(
         (item) => item.entity,
       ),
@@ -187,5 +223,19 @@ export class ContextService {
       .getActiveContext(
         conversationId,
       );
+  }
+
+  private formatProjectName(
+    project: string,
+  ): string {
+    return project
+      .split(' ')
+      .filter(Boolean)
+      .map(
+        (word) =>
+          word.charAt(0).toUpperCase() +
+          word.slice(1).toLowerCase(),
+      )
+      .join(' ');
   }
 }

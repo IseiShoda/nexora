@@ -15,12 +15,44 @@ export class ContextScorer {
       .map((entity, index) => {
         let score = entity.confidence;
 
-        // Les entités les plus récentes
-        // sont légèrement favorisées.
-        score += index * 0.1;
+        /*
+         * Un projet actuellement présent
+         * en mémoire représente l'état courant
+         * du travail de l'utilisateur.
+         */
+        if (
+          entity.source === 'memory' &&
+          entity.type === 'project'
+        ) {
+          score += 0.5;
+        }
 
-        // Limite du score.
-        score = Math.min(score, 1);
+        /*
+         * Une entité projet mentionnée directement
+         * dans la conversation reste importante,
+         * mais elle ne doit pas écraser le projet
+         * actuellement mémorisé.
+         */
+        if (
+          entity.source === 'message' &&
+          entity.type === 'project'
+        ) {
+          score += 0.1;
+        }
+
+        /*
+         * Un nom d'utilisateur est une information
+         * de mémoire, mais ce n'est pas un sujet
+         * de conversation par défaut.
+         */
+        if (entity.type === 'name') {
+          score -= 0.5;
+        }
+
+        /*
+         * Petit avantage aux entités plus récentes.
+         */
+        score += index * 0.01;
 
         return {
           entity,

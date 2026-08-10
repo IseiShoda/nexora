@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+
 import { ContextEntity } from '../entities/entity.interface';
 import { ContextReference } from '../references/reference.interface';
 import { ContextMessage } from '../interfaces/context.interface';
@@ -23,7 +24,9 @@ export class ReferenceResolver {
 
     for (const message of messages) {
       const normalized =
-        this.normalize(message.content);
+        this.normalize(
+          message.content,
+        );
 
       if (
         normalized.includes('il ') ||
@@ -45,10 +48,16 @@ export class ReferenceResolver {
       }
 
       if (
-        normalized.includes('ce projet') ||
-        normalized.includes('cette idee') ||
+        normalized.includes(
+          'ce projet',
+        ) ||
+        normalized.includes(
+          'cette idee',
+        ) ||
         normalized.includes('ca ') ||
-        normalized.includes('cela ')
+        normalized.includes(
+          'cela ',
+        )
       ) {
         references.push({
           value: 'reference',
@@ -74,7 +83,10 @@ export class ReferenceResolver {
         /[\u0300-\u036f]/g,
         '',
       )
-      .replace(/\s+/g, ' ')
+      .replace(
+        /\s+/g,
+        ' ',
+      )
       .trim();
   }
 }

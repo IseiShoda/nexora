@@ -24,9 +24,13 @@ export class MemoryService {
     private readonly repository: MemoryRepository,
   ) {}
 
-  async create(data: MemoryData): Promise<MemoryRecord> {
+  async create(
+    data: MemoryData,
+  ): Promise<MemoryRecord> {
     const existing =
-      await this.repository.findByKey(data.key);
+      await this.repository.findByKey(
+        data.key,
+      );
 
     if (existing) {
       return this.repository.update(
@@ -67,7 +71,9 @@ export class MemoryService {
     );
   }
 
-  async delete(key: string): Promise<void> {
+  async delete(
+    key: string,
+  ): Promise<void> {
     const existing =
       await this.repository.findByKey(key);
 
@@ -90,7 +96,9 @@ export class MemoryService {
     });
   }
 
-  async forget(key: string): Promise<void> {
+  async forget(
+    key: string,
+  ): Promise<void> {
     await this.delete(key);
   }
 
@@ -100,15 +108,18 @@ export class MemoryService {
     const normalized =
       this.normalize(message);
 
+    /*
+     * Détection du prénom
+     */
     let match: RegExpMatchArray | null = null;
 
     match = normalized.match(
-      /je\s+m\s*['’]?\s*appelle\s+([a-zà-ÿ-]+)/i,
+      /je\s+m['’]?\s*appelle\s+([a-zà-ÿ-]+)/i,
     );
 
     if (!match) {
       match = normalized.match(
-        /mon\s+pren[o�]m\s+est\s+([a-zà-ÿ-]+)/i,
+        /mon\s+prénom\s+est\s+([a-zà-ÿ-]+)/i,
       );
     }
 
@@ -118,22 +129,53 @@ export class MemoryService {
       );
     }
 
-    if (!match) {
-      return;
+    if (match) {
+      const name =
+        this.capitalizeName(match[1]);
+
+      await this.remember(
+        'name',
+        name,
+      );
     }
 
-    const name =
-      this.capitalizeName(match[1]);
+    /*
+     * Détection du projet courant
+     *
+     * Exemple :
+     * "Je travaille sur Nexora"
+     * "Je travaille sur Chrono Solar"
+     */
+    const projectMatch =
+      normalized.match(
+        /je\s+travaille\s+(?:aussi\s+)?sur\s+(.+)/i,
+      );
 
-    await this.remember(
-      'name',
-      name,
-    );
+    if (projectMatch) {
+      const project =
+        this.cleanMemoryValue(
+          projectMatch[1],
+        );
+
+      if (project) {
+        await this.remember(
+          'current_project',
+          project,
+        );
+      }
+    }
   }
 
   async getUserName(): Promise<string | null> {
     const memory =
       await this.get('name');
+
+    return memory?.value ?? null;
+  }
+
+  async getCurrentProject(): Promise<string | null> {
+    const memory =
+      await this.get('current_project');
 
     return memory?.value ?? null;
   }
@@ -148,7 +190,10 @@ export class MemoryService {
         /[\u0300-\u036f]/g,
         '',
       )
-      .replace(/\s+/g, ' ')
+      .replace(
+        /\s+/g,
+        ' ',
+      )
       .trim();
   }
 
@@ -163,5 +208,13 @@ export class MemoryService {
       name.charAt(0).toUpperCase() +
       name.slice(1).toLowerCase()
     );
+  }
+
+  private cleanMemoryValue(
+    value: string,
+  ): string {
+    return value
+      .replace(/[.!?]+$/, '')
+      .trim();
   }
 }

@@ -5,6 +5,7 @@ import { ContextModule } from '../context/context.module';
 
 import { BrainService } from './services/brain.service';
 import { IntentService } from './intents/intent.service';
+
 import { BrainDecisionService } from './decisions/brain-decision.service';
 
 @Module({
