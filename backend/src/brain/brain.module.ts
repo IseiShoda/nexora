@@ -7,11 +7,13 @@ import { BrainService } from './services/brain.service';
 import { IntentService } from './intents/intent.service';
 
 import { BrainDecisionService } from './decisions/brain-decision.service';
+import { RequirementsModule } from '../requirements/requirements.module';
 
 @Module({
   imports: [
     MemoryModule,
     ContextModule,
+    RequirementsModule,
   ],
 
   providers: [

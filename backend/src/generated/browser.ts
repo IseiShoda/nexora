@@ -32,3 +32,8 @@ export type Message = Prisma.MessageModel
  * 
  */
 export type UserMemory = Prisma.UserMemoryModel
+/**
+ * Model ProjectRequirement
+ * 
+ */
+export type ProjectRequirement = Prisma.ProjectRequirementModel

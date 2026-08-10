@@ -4,6 +4,8 @@ import { MemoryService } from '../../memory/services/memory.service';
 import { ContextService } from '../../context/services/context.service';
 import { ConversationContext } from '../../context/interfaces/context.interface';
 
+import { RequirementService } from '../../requirements/requirement.service';
+
 import { IntentService } from '../intents/intent.service';
 import { BrainIntent } from '../intents/intent.interface';
 
@@ -17,6 +19,7 @@ export class BrainService {
     private readonly memoryService: MemoryService,
     private readonly contextService: ContextService,
     private readonly decisionService: BrainDecisionService,
+    private readonly requirementService: RequirementService,
   ) {}
 
   async think(
@@ -24,13 +27,17 @@ export class BrainService {
     conversationId: number,
   ): Promise<string> {
     /*
-     * 1. Détection de l'intention
+     * =========================================================
+     * 1. DÉTECTION DE L'INTENTION
+     * =========================================================
      */
     const detected =
       this.intentService.detect(message);
 
     /*
-     * 2. Construction du contexte
+     * =========================================================
+     * 2. CONSTRUCTION DU CONTEXTE
+     * =========================================================
      */
     const context =
       await this.contextService.getContext(
@@ -38,20 +45,31 @@ export class BrainService {
       );
 
     /*
-     * 3. Décision du cerveau
+     * =========================================================
+     * 3. DÉCISION DU CERVEAU
+     * =========================================================
      */
     const decision =
-  this.decisionService.decide(
-    detected.intent,
-    detected.confidence,
-    context,
-  );
+      this.decisionService.decide(
+        detected.intent,
+        detected.confidence,
+        context,
+      );
 
-console.log('[BRAIN] Intent:', detected);
-console.log('[BRAIN] Decision:', decision);
+    console.log(
+      '[BRAIN] Intent:',
+      detected,
+    );
+
+    console.log(
+      '[BRAIN] Decision:',
+      decision,
+    );
 
     /*
-     * 4. Exécution de l'action décidée
+     * =========================================================
+     * 4. EXÉCUTION DE L'ACTION
+     * =========================================================
      */
     switch (decision.action) {
       case BrainAction.ANSWER:
@@ -86,7 +104,6 @@ console.log('[BRAIN] Decision:', decision);
    * INTENTS
    * =========================================================
    */
-
   private async handleIntent(
     intent: BrainIntent,
     message: string,
@@ -111,6 +128,11 @@ console.log('[BRAIN] Decision:', decision);
           context,
         );
 
+      case BrainIntent.PROJECT_REQUIREMENTS_QUERY:
+        return this.handleProjectRequirementsQuery(
+          context,
+        );
+
       default:
         return this.handleContextualResponse(
           message,
@@ -124,7 +146,6 @@ console.log('[BRAIN] Decision:', decision);
    * GREETING
    * =========================================================
    */
-
   private handleGreeting(): string {
     return 'Bonjour 👋 Je suis Nexora. Comment puis-je vous aider ?';
   }
@@ -134,7 +155,6 @@ console.log('[BRAIN] Decision:', decision);
    * IDENTITÉ DE NEXORA
    * =========================================================
    */
-
   private handleIdentity(): string {
     return 'Je suis Nexora, une intelligence conçue pour devenir votre copilote.';
   }
@@ -144,7 +164,6 @@ console.log('[BRAIN] Decision:', decision);
    * NOM DE L'UTILISATEUR
    * =========================================================
    */
-
   private async handleUserName(): Promise<string> {
     const userName =
       await this.memoryService.get('name');
@@ -161,7 +180,6 @@ console.log('[BRAIN] Decision:', decision);
    * PROJET COURANT
    * =========================================================
    */
-
   private async handleUserProject(): Promise<string> {
     const project =
       await this.memoryService.getCurrentProject();
@@ -175,47 +193,187 @@ console.log('[BRAIN] Decision:', decision);
 
   /*
    * =========================================================
-   * EXIGENCE / BESOIN LIÉ AU PROJET
+   * AJOUT D'UNE EXIGENCE
    * =========================================================
    */
-
-  private handleProjectRequirement(
+  private async handleProjectRequirement(
     message: string,
     context: ConversationContext,
-  ): string {
+  ): Promise<string> {
     /*
-     * Une référence explicite comme :
+     * Recherche d'une référence résolue.
+     *
+     * Exemple :
      *
      * "Il doit être rapidement scalable"
      *
-     * doit être résolue vers l'entité
-     * déterminée par le contexte.
+     * "il" → Chrono Solar
      */
-
     const reference =
       context.references.find(
         (item) =>
           item.resolvedTo !== null,
       );
 
+    let project: string | null = null;
+
     if (reference) {
-      return `Je comprends que "${reference.value}" fait référence à ${reference.resolvedTo}. Je retiens également cette exigence : "${message}". 🧠`;
+      project = reference.resolvedTo;
+    } else if (context.activeTopic) {
+      project = context.activeTopic;
     }
 
     /*
-     * Si aucune référence explicite n'est trouvée,
-     * on utilise le sujet actif.
+     * Si aucun projet n'est disponible,
+     * on ne peut pas enregistrer proprement
+     * l'exigence.
      */
-
-    if (context.activeTopic) {
-      return `Je comprends que cette exigence concerne "${context.activeTopic}" : "${message}". 🧠`;
+    if (!project) {
+      return `Je comprends cette exigence : "${message}", mais je ne sais pas encore à quel projet elle se rapporte.`;
     }
 
     /*
-     * Dernier recours.
+     * Nettoyage léger du texte enregistré.
+     *
+     * "Il doit être rapidement scalable"
+     *
+     * devient :
+     *
+     * "doit être rapidement scalable"
+     *
+     * afin d'éviter de stocker le pronom "Il"
+     * comme faisant partie de l'exigence.
      */
+    const requirement =
+      this.cleanRequirement(
+        message,
+      );
 
-    return `Je comprends cette exigence : "${message}". 🧠`;
+    if (!requirement) {
+      return 'Je comprends l\'exigence, mais son contenu semble vide.';
+    }
+
+    /*
+     * Enregistrement dans SQLite via Prisma.
+     */
+    const saved =
+      await this.requirementService.addRequirement(
+        project,
+        requirement,
+      );
+
+    if (!saved) {
+      return 'Je n\'ai pas pu enregistrer cette exigence.';
+    }
+
+    return `J'ai enregistré cette exigence pour "${project}" : "${requirement}". 🧠`;
+  }
+
+  /*
+   * =========================================================
+   * CONSULTATION DES EXIGENCES
+   * =========================================================
+   */
+  private async handleProjectRequirementsQuery(
+    context: ConversationContext,
+  ): Promise<string> {
+    /*
+     * Détermination du projet courant.
+     */
+    const reference =
+      context.references.find(
+        (item) =>
+          item.resolvedTo !== null,
+      );
+
+    let project: string | null = null;
+
+    if (reference) {
+      project = reference.resolvedTo;
+    } else if (context.activeTopic) {
+      project = context.activeTopic;
+    }
+
+    /*
+     * Aucun projet identifié.
+     */
+    if (!project) {
+      return "Je peux te donner les exigences, mais je ne sais pas encore pour quel projet.";
+    }
+
+    /*
+     * Lecture des exigences depuis SQLite.
+     */
+    const requirements =
+      await this.requirementService.getRequirements(
+        project,
+      );
+
+    /*
+     * Aucune exigence enregistrée.
+     */
+    if (requirements.length === 0) {
+      return `Je n'ai encore aucune exigence enregistrée pour "${project}".`;
+    }
+
+    /*
+     * Construction de la réponse.
+     */
+    const lines =
+      requirements.map(
+        (item, index) =>
+          `${index + 1}. ${item.requirement}`,
+      );
+
+    return [
+      `Voici les exigences actuellement enregistrées pour "${project}" :`,
+      '',
+      ...lines,
+      '',
+      `Total : ${requirements.length} exigence(s). 🧠`,
+    ].join('\n');
+  }
+
+  /*
+   * =========================================================
+   * NETTOYAGE D'UNE EXIGENCE
+   * =========================================================
+   */
+  private cleanRequirement(
+    message: string,
+  ): string {
+    let requirement =
+      message.trim();
+
+    /*
+     * Suppression des pronoms faisant référence
+     * au projet courant.
+     *
+     * Exemple :
+     *
+     * "Il doit être rapidement scalable"
+     *
+     * devient :
+     *
+     * "doit être rapidement scalable"
+     */
+    requirement =
+      requirement.replace(
+        /^(il|elle|ça|cela)\s+/i,
+        '',
+      );
+
+    /*
+     * Suppression éventuelle de "que"
+     * après certains débuts de phrase.
+     */
+    requirement =
+      requirement.replace(
+        /^que\s+/i,
+        '',
+      );
+
+    return requirement.trim();
   }
 
   /*
@@ -223,21 +381,19 @@ console.log('[BRAIN] Decision:', decision);
    * RÉPONSE CONTEXTUELLE
    * =========================================================
    */
-
   private handleContextualResponse(
     message: string,
     context: ConversationContext,
   ): string {
-    /*
-     * Priorité à une référence résolue.
-     */
-
     const reference =
       context.references.find(
         (item) =>
           item.resolvedTo !== null,
       );
 
+    /*
+     * Priorité à une référence résolue.
+     */
     if (reference) {
       return `Je comprends que "${reference.value}" fait référence à ${reference.resolvedTo}. 🧠`;
     }
@@ -245,7 +401,6 @@ console.log('[BRAIN] Decision:', decision);
     /*
      * Sinon, conserver le sujet actif.
      */
-
     if (context.activeTopic) {
       return `Je garde le contexte autour de "${context.activeTopic}". Tu viens de me dire : "${message}". 🧠`;
     }
@@ -253,7 +408,6 @@ console.log('[BRAIN] Decision:', decision);
     /*
      * Aucun contexte exploitable.
      */
-
     return `J'ai bien reçu ton message : "${message}".`;
   }
 
@@ -262,7 +416,6 @@ console.log('[BRAIN] Decision:', decision);
    * DEMANDE DE CLARIFICATION
    * =========================================================
    */
-
   private handleClarification(
     message: string,
     context: ConversationContext,

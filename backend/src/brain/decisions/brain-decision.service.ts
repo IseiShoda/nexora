@@ -18,9 +18,25 @@ export class BrainDecisionService {
     confidence: number,
     context: ConversationContext,
   ): BrainDecision {
-    if (
-      intent !== BrainIntent.UNKNOWN
-    ) {
+    /*
+     * =========================================================
+     * INTENTIONS CONNUES
+     * =========================================================
+     *
+     * Toutes les intentions reconnues par IntentService
+     * sont traitées comme une demande à laquelle le cerveau
+     * doit répondre.
+     *
+     * Cela inclut notamment :
+     *
+     * - GREETING
+     * - NEXORA_IDENTITY
+     * - USER_NAME
+     * - USER_PROJECT
+     * - PROJECT_REQUIREMENT
+     * - PROJECT_REQUIREMENTS_QUERY
+     */
+    if (intent !== BrainIntent.UNKNOWN) {
       return {
         intent,
         action: BrainAction.ANSWER,
@@ -29,6 +45,22 @@ export class BrainDecisionService {
       };
     }
 
+    /*
+     * =========================================================
+     * INTENTION INCONNUE MAIS CONTEXTE DISPONIBLE
+     * =========================================================
+     *
+     * Exemple :
+     *
+     * Contexte :
+     * "Chrono Solar"
+     *
+     * Message :
+     * "Et pour les coûts ?"
+     *
+     * L'intention n'est pas encore reconnue,
+     * mais le contexte peut permettre de continuer.
+     */
     if (
       context.relevance.bestMatch &&
       context.activeTopic
@@ -41,6 +73,11 @@ export class BrainDecisionService {
       };
     }
 
+    /*
+     * =========================================================
+     * AUCUN CONTEXTE EXPLOITABLE
+     * =========================================================
+     */
     return {
       intent,
       action: BrainAction.ASK_CLARIFICATION,

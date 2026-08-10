@@ -399,7 +399,8 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export const ModelName = {
   Conversation: 'Conversation',
   Message: 'Message',
-  UserMemory: 'UserMemory'
+  UserMemory: 'UserMemory',
+  ProjectRequirement: 'ProjectRequirement'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -415,7 +416,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "conversation" | "message" | "userMemory"
+    modelProps: "conversation" | "message" | "userMemory" | "projectRequirement"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -641,6 +642,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ProjectRequirement: {
+      payload: Prisma.$ProjectRequirementPayload<ExtArgs>
+      fields: Prisma.ProjectRequirementFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ProjectRequirementFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectRequirementPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ProjectRequirementFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectRequirementPayload>
+        }
+        findFirst: {
+          args: Prisma.ProjectRequirementFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectRequirementPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ProjectRequirementFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectRequirementPayload>
+        }
+        findMany: {
+          args: Prisma.ProjectRequirementFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectRequirementPayload>[]
+        }
+        create: {
+          args: Prisma.ProjectRequirementCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectRequirementPayload>
+        }
+        createMany: {
+          args: Prisma.ProjectRequirementCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ProjectRequirementCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectRequirementPayload>[]
+        }
+        delete: {
+          args: Prisma.ProjectRequirementDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectRequirementPayload>
+        }
+        update: {
+          args: Prisma.ProjectRequirementUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectRequirementPayload>
+        }
+        deleteMany: {
+          args: Prisma.ProjectRequirementDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ProjectRequirementUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ProjectRequirementUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectRequirementPayload>[]
+        }
+        upsert: {
+          args: Prisma.ProjectRequirementUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectRequirementPayload>
+        }
+        aggregate: {
+          args: Prisma.ProjectRequirementAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateProjectRequirement>
+        }
+        groupBy: {
+          args: Prisma.ProjectRequirementGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ProjectRequirementGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ProjectRequirementCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ProjectRequirementCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -709,6 +784,18 @@ export const UserMemoryScalarFieldEnum = {
 export type UserMemoryScalarFieldEnum = (typeof UserMemoryScalarFieldEnum)[keyof typeof UserMemoryScalarFieldEnum]
 
 
+export const ProjectRequirementScalarFieldEnum = {
+  id: 'id',
+  project: 'project',
+  requirement: 'requirement',
+  active: 'active',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ProjectRequirementScalarFieldEnum = (typeof ProjectRequirementScalarFieldEnum)[keyof typeof ProjectRequirementScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -749,6 +836,13 @@ export type StringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 
  * Reference to a field of type 'DateTime'
  */
 export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
+    
+
+
+/**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -912,6 +1006,7 @@ export type GlobalOmitConfig = {
   conversation?: Prisma.ConversationOmit
   message?: Prisma.MessageOmit
   userMemory?: Prisma.UserMemoryOmit
+  projectRequirement?: Prisma.ProjectRequirementOmit
 }
 
 /* Types for Logging */

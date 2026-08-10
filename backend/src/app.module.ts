@@ -5,6 +5,7 @@ import { ChatModule } from './chat/chat.module';
 import { MemoryModule } from './memory/memory.module';
 import { BrainModule } from './brain/brain.module';
 import { ContextModule } from './context/context.module';
+import { RequirementsModule } from './requirements/requirements.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { ContextModule } from './context/context.module';
     MemoryModule,
     BrainModule,
     ContextModule,
+    RequirementsModule,
   ],
 
   controllers: [

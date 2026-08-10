@@ -53,7 +53,8 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   Conversation: 'Conversation',
   Message: 'Message',
-  UserMemory: 'UserMemory'
+  UserMemory: 'UserMemory',
+  ProjectRequirement: 'ProjectRequirement'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -99,6 +100,18 @@ export const UserMemoryScalarFieldEnum = {
 } as const
 
 export type UserMemoryScalarFieldEnum = (typeof UserMemoryScalarFieldEnum)[keyof typeof UserMemoryScalarFieldEnum]
+
+
+export const ProjectRequirementScalarFieldEnum = {
+  id: 'id',
+  project: 'project',
+  requirement: 'requirement',
+  active: 'active',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ProjectRequirementScalarFieldEnum = (typeof ProjectRequirementScalarFieldEnum)[keyof typeof ProjectRequirementScalarFieldEnum]
 
 
 export const SortOrder = {

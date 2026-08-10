@@ -94,7 +94,60 @@ export class IntentService {
 
     /*
      * =========================================================
+     * PROJECT REQUIREMENTS QUERY
+     *
+     * Questions permettant de consulter les exigences
+     * déjà enregistrées pour le projet.
+     *
+     * Exemples :
+     *
+     * "Quelles sont les exigences de Chrono Solar ?"
+     * "Quelles exigences avons-nous ?"
+     * "Quelles sont nos contraintes ?"
+     * "Qu'est-ce qui est requis pour le projet ?"
+     * "Montre-moi les exigences du projet"
+     * =========================================================
+     */
+    if (
+      normalized.includes('quelles sont les exigences') ||
+      normalized.includes('quels sont les exigences') ||
+      normalized.includes('quelles exigences') ||
+      normalized.includes('quels exigences') ||
+      normalized.includes('exigences du projet') ||
+      normalized.includes('exigences de') ||
+      normalized.includes('exigence du projet') ||
+      normalized.includes('exigence de') ||
+      normalized.includes('nos exigences') ||
+      normalized.includes('les exigences') ||
+      normalized.includes('quelles sont nos contraintes') ||
+      normalized.includes('quelles contraintes') ||
+      normalized.includes('nos contraintes') ||
+      normalized.includes('contraintes du projet') ||
+      normalized.includes('contrainte du projet') ||
+      normalized.includes('qu est ce qui est requis') ||
+      normalized.includes('ce qui est requis') ||
+      normalized.includes('montre moi les exigences') ||
+      normalized.includes('liste les exigences') ||
+      normalized.includes('liste des exigences')
+    ) {
+      return {
+        intent: BrainIntent.PROJECT_REQUIREMENTS_QUERY,
+        confidence: 0.95,
+      };
+    }
+
+    /*
+     * =========================================================
      * PROJECT REQUIREMENT
+     *
+     * Détection d'une nouvelle exigence à enregistrer.
+     *
+     * Exemples :
+     *
+     * "Il doit être rapidement scalable"
+     * "Nexora doit être sécurisé"
+     * "Il faut une architecture évolutive"
+     * "Le projet nécessite une bonne base"
      * =========================================================
      */
     if (
