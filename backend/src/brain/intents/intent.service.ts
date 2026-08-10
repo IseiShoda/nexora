@@ -167,7 +167,13 @@ export class IntentService {
       normalized.includes('je souhaite que') ||
       normalized.includes('il est important que') ||
       normalized.includes('contrainte') ||
-      normalized.includes('exigence')
+      normalized.includes('exigence') ||
+      normalized.includes('devra') ||
+      normalized.includes('devront') ||
+      normalized.includes('doivent') ||
+      normalized.includes('devrait') ||
+      normalized.includes('devra pouvoir') ||
+      normalized.includes('doit pouvoir')
     ) {
       return {
         intent: BrainIntent.PROJECT_REQUIREMENT,

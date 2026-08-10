@@ -6,6 +6,9 @@ import { ConversationContext } from '../../context/interfaces/context.interface'
 
 import { RequirementService } from '../../requirements/requirement.service';
 
+import { ReasoningService } from '../../reasoning/services/reasoning.service';
+import { ReasoningResult } from '../../reasoning/interfaces/reasoning.interface';
+
 import { IntentService } from '../intents/intent.service';
 import { BrainIntent } from '../intents/intent.interface';
 
@@ -20,6 +23,7 @@ export class BrainService {
     private readonly contextService: ContextService,
     private readonly decisionService: BrainDecisionService,
     private readonly requirementService: RequirementService,
+    private readonly reasoningService: ReasoningService,
   ) {}
 
   async think(
@@ -28,7 +32,7 @@ export class BrainService {
   ): Promise<string> {
     /*
      * =========================================================
-     * 1. DÉTECTION DE L'INTENTION
+     * 1. INTENT
      * =========================================================
      */
     const detected =
@@ -36,7 +40,7 @@ export class BrainService {
 
     /*
      * =========================================================
-     * 2. CONSTRUCTION DU CONTEXTE
+     * 2. CONTEXT
      * =========================================================
      */
     const context =
@@ -46,7 +50,19 @@ export class BrainService {
 
     /*
      * =========================================================
-     * 3. DÉCISION DU CERVEAU
+     * 3. REASONING
+     * =========================================================
+     */
+    const reasoning =
+  this.reasoningService.analyze(
+    message,
+    context.activeTopic,
+    context,
+  );
+
+    /*
+     * =========================================================
+     * 4. DECISION
      * =========================================================
      */
     const decision =
@@ -62,13 +78,18 @@ export class BrainService {
     );
 
     console.log(
+      '[REASONING] Result:',
+      reasoning,
+    );
+
+    console.log(
       '[BRAIN] Decision:',
       decision,
     );
 
     /*
      * =========================================================
-     * 4. EXÉCUTION DE L'ACTION
+     * 5. ACTION
      * =========================================================
      */
     switch (decision.action) {
@@ -77,6 +98,7 @@ export class BrainService {
           detected.intent,
           message,
           context,
+          reasoning,
         );
 
       case BrainAction.CONTINUE_CONTEXT:
@@ -108,6 +130,7 @@ export class BrainService {
     intent: BrainIntent,
     message: string,
     context: ConversationContext,
+    reasoning: ReasoningResult,
   ): Promise<string> {
     switch (intent) {
       case BrainIntent.GREETING:
@@ -126,6 +149,7 @@ export class BrainService {
         return this.handleProjectRequirement(
           message,
           context,
+          reasoning,
         );
 
       case BrainIntent.PROJECT_REQUIREMENTS_QUERY:
@@ -152,7 +176,7 @@ export class BrainService {
 
   /*
    * =========================================================
-   * IDENTITÉ DE NEXORA
+   * IDENTITÉ
    * =========================================================
    */
   private handleIdentity(): string {
@@ -161,7 +185,7 @@ export class BrainService {
 
   /*
    * =========================================================
-   * NOM DE L'UTILISATEUR
+   * NOM UTILISATEUR
    * =========================================================
    */
   private async handleUserName(): Promise<string> {
@@ -177,7 +201,7 @@ export class BrainService {
 
   /*
    * =========================================================
-   * PROJET COURANT
+   * PROJET
    * =========================================================
    */
   private async handleUserProject(): Promise<string> {
@@ -193,22 +217,14 @@ export class BrainService {
 
   /*
    * =========================================================
-   * AJOUT D'UNE EXIGENCE
+   * PROJECT REQUIREMENT
    * =========================================================
    */
   private async handleProjectRequirement(
     message: string,
     context: ConversationContext,
+    reasoning: ReasoningResult,
   ): Promise<string> {
-    /*
-     * Recherche d'une référence résolue.
-     *
-     * Exemple :
-     *
-     * "Il doit être rapidement scalable"
-     *
-     * "il" → Chrono Solar
-     */
     const reference =
       context.references.find(
         (item) =>
@@ -223,38 +239,21 @@ export class BrainService {
       project = context.activeTopic;
     }
 
-    /*
-     * Si aucun projet n'est disponible,
-     * on ne peut pas enregistrer proprement
-     * l'exigence.
-     */
     if (!project) {
       return `Je comprends cette exigence : "${message}", mais je ne sais pas encore à quel projet elle se rapporte.`;
     }
 
-    /*
-     * Nettoyage léger du texte enregistré.
-     *
-     * "Il doit être rapidement scalable"
-     *
-     * devient :
-     *
-     * "doit être rapidement scalable"
-     *
-     * afin d'éviter de stocker le pronom "Il"
-     * comme faisant partie de l'exigence.
-     */
     const requirement =
-      this.cleanRequirement(
-        message,
-      );
+      this.cleanRequirement(message);
 
     if (!requirement) {
-      return 'Je comprends l\'exigence, mais son contenu semble vide.';
+      return "Je comprends l'exigence, mais son contenu semble vide.";
     }
 
     /*
-     * Enregistrement dans SQLite via Prisma.
+     * =======================================================
+     * ENREGISTREMENT
+     * =======================================================
      */
     const saved =
       await this.requirementService.addRequirement(
@@ -263,23 +262,108 @@ export class BrainService {
       );
 
     if (!saved) {
-      return 'Je n\'ai pas pu enregistrer cette exigence.';
+      return "Je n'ai pas pu enregistrer cette exigence.";
     }
-
-    return `J'ai enregistré cette exigence pour "${project}" : "${requirement}". 🧠`;
+    
+    /*
+     * =======================================================
+     * RÉPONSE ENRICHIE PAR LE REASONING
+     * =======================================================
+     */
+    return this.buildRequirementResponse(
+      project,
+      requirement,
+      reasoning,
+    );
   }
 
   /*
    * =========================================================
-   * CONSULTATION DES EXIGENCES
+   * REQUIREMENT RESPONSE
+   * =========================================================
+   */
+  private buildRequirementResponse(
+    project: string,
+    requirement: string,
+    reasoning: ReasoningResult,
+  ): string {
+    const response: string[] = [];
+
+    response.push(
+      `J'ai enregistré cette exigence pour "${project}" : "${requirement}". 🧠`,
+    );
+
+    /*
+     * ---------------------------------------------------------
+     * INFERENCE
+     * ---------------------------------------------------------
+     */
+    if (reasoning.inferences.length > 0) {
+      response.push('');
+      response.push('Ce que j\'en déduis :');
+
+      for (const inference of reasoning.inferences) {
+        response.push(
+          `• ${inference.content}`,
+        );
+      }
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * IMPLICATIONS
+     * ---------------------------------------------------------
+     */
+    if (reasoning.implications.length > 0) {
+      response.push('');
+      response.push('Implications identifiées :');
+
+      for (const implication of reasoning.implications) {
+        response.push(
+          `• ${implication.content}`,
+        );
+      }
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * UNKNOWN
+     * ---------------------------------------------------------
+     */
+    if (reasoning.unknowns.length > 0) {
+      response.push('');
+      response.push('Point encore à préciser :');
+
+      for (const unknown of reasoning.unknowns) {
+        response.push(
+          `• ${unknown.content}`,
+        );
+      }
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * QUESTION
+     * ---------------------------------------------------------
+     */
+    if (reasoning.questions.length > 0) {
+      response.push('');
+      response.push(
+        `Question : ${reasoning.questions[0]}`,
+      );
+    }
+
+    return response.join('\n');
+  }
+
+  /*
+   * =========================================================
+   * PROJECT REQUIREMENTS QUERY
    * =========================================================
    */
   private async handleProjectRequirementsQuery(
     context: ConversationContext,
   ): Promise<string> {
-    /*
-     * Détermination du projet courant.
-     */
     const reference =
       context.references.find(
         (item) =>
@@ -294,31 +378,19 @@ export class BrainService {
       project = context.activeTopic;
     }
 
-    /*
-     * Aucun projet identifié.
-     */
     if (!project) {
       return "Je peux te donner les exigences, mais je ne sais pas encore pour quel projet.";
     }
 
-    /*
-     * Lecture des exigences depuis SQLite.
-     */
     const requirements =
       await this.requirementService.getRequirements(
         project,
       );
 
-    /*
-     * Aucune exigence enregistrée.
-     */
     if (requirements.length === 0) {
       return `Je n'ai encore aucune exigence enregistrée pour "${project}".`;
     }
 
-    /*
-     * Construction de la réponse.
-     */
     const lines =
       requirements.map(
         (item, index) =>
@@ -336,7 +408,7 @@ export class BrainService {
 
   /*
    * =========================================================
-   * NETTOYAGE D'UNE EXIGENCE
+   * CLEAN REQUIREMENT
    * =========================================================
    */
   private cleanRequirement(
@@ -345,28 +417,12 @@ export class BrainService {
     let requirement =
       message.trim();
 
-    /*
-     * Suppression des pronoms faisant référence
-     * au projet courant.
-     *
-     * Exemple :
-     *
-     * "Il doit être rapidement scalable"
-     *
-     * devient :
-     *
-     * "doit être rapidement scalable"
-     */
     requirement =
       requirement.replace(
         /^(il|elle|ça|cela)\s+/i,
         '',
       );
 
-    /*
-     * Suppression éventuelle de "que"
-     * après certains débuts de phrase.
-     */
     requirement =
       requirement.replace(
         /^que\s+/i,
@@ -378,7 +434,7 @@ export class BrainService {
 
   /*
    * =========================================================
-   * RÉPONSE CONTEXTUELLE
+   * CONTEXTUAL RESPONSE
    * =========================================================
    */
   private handleContextualResponse(
@@ -391,29 +447,20 @@ export class BrainService {
           item.resolvedTo !== null,
       );
 
-    /*
-     * Priorité à une référence résolue.
-     */
     if (reference) {
       return `Je comprends que "${reference.value}" fait référence à ${reference.resolvedTo}. 🧠`;
     }
 
-    /*
-     * Sinon, conserver le sujet actif.
-     */
     if (context.activeTopic) {
       return `Je garde le contexte autour de "${context.activeTopic}". Tu viens de me dire : "${message}". 🧠`;
     }
 
-    /*
-     * Aucun contexte exploitable.
-     */
     return `J'ai bien reçu ton message : "${message}".`;
   }
 
   /*
    * =========================================================
-   * DEMANDE DE CLARIFICATION
+   * CLARIFICATION
    * =========================================================
    */
   private handleClarification(

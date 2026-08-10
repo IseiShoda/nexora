@@ -6,6 +6,7 @@ import { MemoryModule } from './memory/memory.module';
 import { BrainModule } from './brain/brain.module';
 import { ContextModule } from './context/context.module';
 import { RequirementsModule } from './requirements/requirements.module';
+import { ReasoningModule } from './reasoning/reasoning.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { RequirementsModule } from './requirements/requirements.module';
     BrainModule,
     ContextModule,
     RequirementsModule,
+    ReasoningModule,
   ],
 
   controllers: [
