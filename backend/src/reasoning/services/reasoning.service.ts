@@ -21,8 +21,15 @@ export class ReasoningService {
   ): ReasoningResult {
     const normalized = this.normalize(message);
 
-    console.log('[REASONING] Message:', message);
-    console.log('[REASONING] Subject:', subject);
+    console.log(
+      '[REASONING] Message:',
+      message,
+    );
+
+    console.log(
+      '[REASONING] Subject:',
+      subject,
+    );
 
     if (context) {
       console.log(
@@ -46,6 +53,40 @@ export class ReasoningService {
       );
     }
 
+    /*
+     * =========================================================
+     * QUESTION PROTECTION
+     *
+     * Une question ne doit jamais être analysée comme une
+     * nouvelle exigence.
+     *
+     * Exemple :
+     *
+     * "Pourquoi Chrono Solar doit-il supporter
+     * 100 000 utilisateurs tout en restant rapide ?"
+     *
+     * Cette phrase contient "doit", "supporter" et
+     * "utilisateurs", mais elle reste une question.
+     * =========================================================
+     */
+    if (
+      normalized.endsWith('?') ||
+      /^(pourquoi|comment|quand|ou|quel|quelle|quels|quelles|est-ce que|dois-je|doit-il|doit-elle)/i.test(
+        normalized,
+      )
+    ) {
+      return {
+        subject,
+        type: ReasoningType.UNKNOWN,
+        facts: [],
+        inferences: [],
+        unknowns: [],
+        implications: [],
+        dependencies: [],
+        questions: [message.trim()],
+      };
+    }
+
     const facts: ReasoningFact[] = [];
     const inferences: ReasoningInference[] = [];
     const unknowns: ReasoningUnknown[] = [];
@@ -63,14 +104,31 @@ export class ReasoningService {
       context?.messages ?? [];
 
     const previousText = previousContext
-      .map((item) => this.normalize(item.content))
+      .map((item) =>
+        this.normalize(item.content),
+      )
       .join(' ');
 
     const previousAskedForLoadTarget =
-      previousText.includes('quelle charge cible') ||
-      previousText.includes('charge cible') ||
+      previousText.includes(
+        'quelle charge cible',
+      ) ||
+      previousText.includes(
+        'charge cible',
+      ) ||
       previousText.includes(
         'niveau de scalabilite attendu',
+      );
+
+    /*
+     * =========================================================
+     * LOAD TARGET DETECTION
+     * =========================================================
+     */
+
+    const loadTargetMatch =
+      normalized.match(
+        /(\d[\d\s.,]*)\s*(utilisateurs?|users?)/i,
       );
 
     /*
@@ -123,13 +181,17 @@ export class ReasoningService {
        * =======================================================
        */
 
-      if (
+      const isScalabilityRequirement =
         normalized.includes('scalable') ||
         normalized.includes('scalabilite') ||
         normalized.includes('montee en charge') ||
         normalized.includes('beaucoup d utilisateurs') ||
-        normalized.includes('utilisateurs')
-      ) {
+        normalized.includes('utilisateurs') ||
+        normalized.includes('supporter') ||
+        normalized.includes('supportera') ||
+        normalized.includes('supporte');
+
+      if (isScalabilityRequirement) {
         /*
          * -----------------------------------------------------
          * INFERENCE
@@ -160,76 +222,86 @@ export class ReasoningService {
          * -----------------------------------------------------
          */
 
-        dependencies.push(
-          {
-            content: 'Architecture',
-            type: 'TECHNICAL',
-          },
-          {
-            content: 'Infrastructure',
-            type: 'TECHNICAL',
-          },
-          {
-            content: 'Base de données',
-            type: 'TECHNICAL',
-          },
+        this.addDependency(
+          dependencies,
+          'Architecture',
+          'TECHNICAL',
+        );
+
+        this.addDependency(
+          dependencies,
+          'Infrastructure',
+          'TECHNICAL',
+        );
+
+        this.addDependency(
+          dependencies,
+          'Base de données',
+          'TECHNICAL',
         );
 
         /*
          * -----------------------------------------------------
          * LOAD TARGET
          * -----------------------------------------------------
-         *
-         * Exemple :
-         *
-         * "Il devra supporter 100 000 utilisateurs"
-         *
-         * Si une question précédente demandait la charge cible,
-         * cette nouvelle information vient répondre à cette
-         * inconnue.
          */
 
-        const loadTargetMatch = message.match(
-          /(\d[\d\s.,]*)\s*(utilisateurs|users)/i,
-        );
-
-        if (
-          loadTargetMatch &&
-          previousAskedForLoadTarget
-        ) {
+        if (loadTargetMatch) {
           const loadTarget =
-            loadTargetMatch[1]
-              .replace(/\s+/g, ' ')
-              .trim();
+            this.normalizeLoadTarget(
+              loadTargetMatch[1],
+            );
+
+          /*
+           * FACT
+           */
+
+          facts.push({
+            content:
+              `La charge cible est de ${loadTarget} utilisateurs.`,
+            source: 'USER',
+          });
+
+          /*
+           * INFERENCE
+           */
 
           inferences.push({
             content:
-              `La charge cible du système est de ${loadTarget} utilisateurs.`,
+              `Le système devra être dimensionné pour supporter jusqu à ${loadTarget} utilisateurs.`,
             basedOn: [
               message.trim(),
-              'Question précédente concernant la charge cible.',
             ],
           });
 
+          /*
+           * IMPLICATION
+           */
+
           implications.push({
             content:
-              `L architecture devra être dimensionnée pour supporter jusqu à ${loadTarget} utilisateurs.`,
-            basedOn: [message.trim()],
+              `L architecture devra être dimensionnée pour supporter une charge pouvant atteindre ${loadTarget} utilisateurs.`,
+            basedOn: [
+              message.trim(),
+            ],
           });
 
-          dependencies.push({
-            content: 'Capacity Planning',
-            type: 'TECHNICAL',
-          });
-        }
+          /*
+           * DEPENDENCY
+           */
 
-        /*
-         * -----------------------------------------------------
-         * UNKNOWN
-         * -----------------------------------------------------
-         */
+          this.addDependency(
+            dependencies,
+            'Capacity Planning',
+            'TECHNICAL',
+          );
+        } else if (
+          !previousAskedForLoadTarget
+        ) {
+          /*
+           * UNKNOWN
+           */
 
-        if (!loadTargetMatch) {
           unknowns.push({
             content: 'Charge cible',
             reason:
@@ -264,10 +336,11 @@ export class ReasoningService {
           basedOn: [message.trim()],
         });
 
-        dependencies.push({
-          content: 'Security',
-          type: 'TECHNICAL',
-        });
+        this.addDependency(
+          dependencies,
+          'Security',
+          'TECHNICAL',
+        );
       }
 
       /*
@@ -296,10 +369,11 @@ export class ReasoningService {
           basedOn: [message.trim()],
         });
 
-        dependencies.push({
-          content: 'Performance',
-          type: 'TECHNICAL',
-        });
+        this.addDependency(
+          dependencies,
+          'Performance',
+          'TECHNICAL',
+        );
       }
 
       /*
@@ -340,16 +414,60 @@ export class ReasoningService {
 
   /*
    * =========================================================
+   * ADD DEPENDENCY
+   * =========================================================
+   */
+
+  private addDependency(
+    dependencies: ReasoningDependency[],
+    content: string,
+    type: string,
+  ): void {
+    const exists =
+      dependencies.some(
+        (dependency) =>
+          dependency.content === content,
+      );
+
+    if (!exists) {
+      dependencies.push({
+        content,
+        type,
+      });
+    }
+  }
+
+  /*
+   * =========================================================
+   * NORMALIZE LOAD TARGET
+   * =========================================================
+   */
+
+  private normalizeLoadTarget(
+    value: string,
+  ): string {
+    return value
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  /*
+   * =========================================================
    * NORMALIZATION
    * =========================================================
    */
 
-  private normalize(text: string): string {
+  private normalize(
+    text: string,
+  ): string {
     return text
       .toLowerCase()
       .replace(/�/g, '')
       .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
+      .replace(
+        /[\u0300-\u036f]/g,
+        '',
+      )
       .replace(/\s+/g, ' ')
       .trim();
   }

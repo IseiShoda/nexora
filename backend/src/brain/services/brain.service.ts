@@ -35,6 +35,7 @@ export class BrainService {
      * 1. INTENT
      * =========================================================
      */
+
     const detected =
       this.intentService.detect(message);
 
@@ -43,6 +44,7 @@ export class BrainService {
      * 2. CONTEXT
      * =========================================================
      */
+
     const context =
       await this.contextService.getContext(
         conversationId,
@@ -53,18 +55,20 @@ export class BrainService {
      * 3. REASONING
      * =========================================================
      */
+
     const reasoning =
-  this.reasoningService.analyze(
-    message,
-    context.activeTopic,
-    context,
-  );
+      this.reasoningService.analyze(
+        message,
+        context.activeTopic,
+        context,
+      );
 
     /*
      * =========================================================
      * 4. DECISION
      * =========================================================
      */
+
     const decision =
       this.decisionService.decide(
         detected.intent,
@@ -92,6 +96,7 @@ export class BrainService {
      * 5. ACTION
      * =========================================================
      */
+
     switch (decision.action) {
       case BrainAction.ANSWER:
         return this.handleIntent(
@@ -126,6 +131,7 @@ export class BrainService {
    * INTENTS
    * =========================================================
    */
+
   private async handleIntent(
     intent: BrainIntent,
     message: string,
@@ -170,6 +176,7 @@ export class BrainService {
    * GREETING
    * =========================================================
    */
+
   private handleGreeting(): string {
     return 'Bonjour 👋 Je suis Nexora. Comment puis-je vous aider ?';
   }
@@ -179,6 +186,7 @@ export class BrainService {
    * IDENTITÉ
    * =========================================================
    */
+
   private handleIdentity(): string {
     return 'Je suis Nexora, une intelligence conçue pour devenir votre copilote.';
   }
@@ -188,6 +196,7 @@ export class BrainService {
    * NOM UTILISATEUR
    * =========================================================
    */
+
   private async handleUserName(): Promise<string> {
     const userName =
       await this.memoryService.get('name');
@@ -204,6 +213,7 @@ export class BrainService {
    * PROJET
    * =========================================================
    */
+
   private async handleUserProject(): Promise<string> {
     const project =
       await this.memoryService.getCurrentProject();
@@ -220,6 +230,7 @@ export class BrainService {
    * PROJECT REQUIREMENT
    * =========================================================
    */
+
   private async handleProjectRequirement(
     message: string,
     context: ConversationContext,
@@ -252,9 +263,10 @@ export class BrainService {
 
     /*
      * =======================================================
-     * ENREGISTREMENT
+     * REQUIREMENT STORAGE
      * =======================================================
      */
+
     const saved =
       await this.requirementService.addRequirement(
         project,
@@ -264,24 +276,40 @@ export class BrainService {
     if (!saved) {
       return "Je n'ai pas pu enregistrer cette exigence.";
     }
-    
+
     /*
      * =======================================================
-     * RÉPONSE ENRICHIE PAR LE REASONING
+     * EXISTING REQUIREMENT
      * =======================================================
      */
+
+    if (!saved.created) {
+      return this.buildExistingRequirementResponse(
+        project,
+        saved.requirement.requirement,
+        reasoning,
+      );
+    }
+
+    /*
+     * =======================================================
+     * NEW REQUIREMENT
+     * =======================================================
+     */
+
     return this.buildRequirementResponse(
       project,
-      requirement,
+      saved.requirement.requirement,
       reasoning,
     );
   }
 
   /*
    * =========================================================
-   * REQUIREMENT RESPONSE
+   * NEW REQUIREMENT RESPONSE
    * =========================================================
    */
+
   private buildRequirementResponse(
     project: string,
     requirement: string,
@@ -290,7 +318,7 @@ export class BrainService {
     const response: string[] = [];
 
     response.push(
-      `J'ai enregistré cette exigence pour "${project}" : "${requirement}". 🧠`,
+      `J'ai enregistré cette nouvelle exigence pour "${project}" : "${requirement}". 🧠`,
     );
 
     /*
@@ -298,6 +326,7 @@ export class BrainService {
      * INFERENCE
      * ---------------------------------------------------------
      */
+
     if (reasoning.inferences.length > 0) {
       response.push('');
       response.push('Ce que j\'en déduis :');
@@ -314,6 +343,7 @@ export class BrainService {
      * IMPLICATIONS
      * ---------------------------------------------------------
      */
+
     if (reasoning.implications.length > 0) {
       response.push('');
       response.push('Implications identifiées :');
@@ -330,6 +360,7 @@ export class BrainService {
      * UNKNOWN
      * ---------------------------------------------------------
      */
+
     if (reasoning.unknowns.length > 0) {
       response.push('');
       response.push('Point encore à préciser :');
@@ -346,6 +377,91 @@ export class BrainService {
      * QUESTION
      * ---------------------------------------------------------
      */
+
+    if (reasoning.questions.length > 0) {
+      response.push('');
+      response.push(
+        `Question : ${reasoning.questions[0]}`,
+      );
+    }
+
+    return response.join('\n');
+  }
+
+  /*
+   * =========================================================
+   * EXISTING REQUIREMENT RESPONSE
+   * =========================================================
+   */
+
+  private buildExistingRequirementResponse(
+    project: string,
+    requirement: string,
+    reasoning: ReasoningResult,
+  ): string {
+    const response: string[] = [];
+
+    response.push(
+      `Cette exigence existe déjà pour "${project}" : "${requirement}". 🧠`,
+    );
+
+    /*
+     * ---------------------------------------------------------
+     * INFERENCE
+     * ---------------------------------------------------------
+     */
+
+    if (reasoning.inferences.length > 0) {
+      response.push('');
+      response.push('Ce que j\'en déduis :');
+
+      for (const inference of reasoning.inferences) {
+        response.push(
+          `• ${inference.content}`,
+        );
+      }
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * IMPLICATIONS
+     * ---------------------------------------------------------
+     */
+
+    if (reasoning.implications.length > 0) {
+      response.push('');
+      response.push('Implications identifiées :');
+
+      for (const implication of reasoning.implications) {
+        response.push(
+          `• ${implication.content}`,
+        );
+      }
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * UNKNOWN
+     * ---------------------------------------------------------
+     */
+
+    if (reasoning.unknowns.length > 0) {
+      response.push('');
+      response.push('Point encore à préciser :');
+
+      for (const unknown of reasoning.unknowns) {
+        response.push(
+          `• ${unknown.content}`,
+        );
+      }
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * QUESTION
+     * ---------------------------------------------------------
+     */
+
     if (reasoning.questions.length > 0) {
       response.push('');
       response.push(
@@ -361,6 +477,7 @@ export class BrainService {
    * PROJECT REQUIREMENTS QUERY
    * =========================================================
    */
+
   private async handleProjectRequirementsQuery(
     context: ConversationContext,
   ): Promise<string> {
@@ -411,17 +528,38 @@ export class BrainService {
    * CLEAN REQUIREMENT
    * =========================================================
    */
+
   private cleanRequirement(
     message: string,
   ): string {
     let requirement =
       message.trim();
 
+    /*
+     * Supprime les pronoms / connecteurs utilisés
+     * lorsqu'une exigence fait référence au projet.
+     *
+     * Exemples :
+     *
+     * "Il devra supporter 100 000 utilisateurs"
+     * -> "devra supporter 100 000 utilisateurs"
+     *
+     * "Et il devra rester rapide"
+     * -> "devra rester rapide"
+     *
+     * "Elle doit être sécurisée"
+     * -> "doit être sécurisée"
+     */
+
     requirement =
       requirement.replace(
-        /^(il|elle|ça|cela)\s+/i,
+        /^(et\s+)?(il|elle|ça|cela)\s+/i,
         '',
       );
+
+    /*
+     * Supprime "que" en début de phrase.
+     */
 
     requirement =
       requirement.replace(
@@ -429,7 +567,16 @@ export class BrainService {
         '',
       );
 
-    return requirement.trim();
+    /*
+     * Nettoyage des espaces.
+     */
+
+    requirement =
+      requirement
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    return requirement;
   }
 
   /*
@@ -437,6 +584,7 @@ export class BrainService {
    * CONTEXTUAL RESPONSE
    * =========================================================
    */
+
   private handleContextualResponse(
     message: string,
     context: ConversationContext,
@@ -463,6 +611,7 @@ export class BrainService {
    * CLARIFICATION
    * =========================================================
    */
+
   private handleClarification(
     message: string,
     context: ConversationContext,

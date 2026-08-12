@@ -15,6 +15,31 @@ export class IntentService {
 
     /*
      * =========================================================
+     * QUESTION
+     *
+     * Une question ne doit jamais être enregistrée comme
+     * une nouvelle exigence.
+     *
+     * Exemple :
+     * "Pourquoi Chrono Solar doit-il supporter 100 000 utilisateurs ?"
+     *
+     * Même si la phrase contient "doit", c'est une question.
+     * =========================================================
+     */
+    if (
+      normalized.endsWith('?') ||
+      /^(pourquoi|comment|quand|ou|quel|quelle|quels|quelles|est-ce que|dois-je|doit-il|doit-elle)/i.test(
+        normalized,
+      )
+    ) {
+      return {
+        intent: BrainIntent.UNKNOWN,
+        confidence: 0.8,
+      };
+    }
+
+    /*
+     * =========================================================
      * GREETING
      * =========================================================
      */
@@ -95,17 +120,6 @@ export class IntentService {
     /*
      * =========================================================
      * PROJECT REQUIREMENTS QUERY
-     *
-     * Questions permettant de consulter les exigences
-     * déjà enregistrées pour le projet.
-     *
-     * Exemples :
-     *
-     * "Quelles sont les exigences de Chrono Solar ?"
-     * "Quelles exigences avons-nous ?"
-     * "Quelles sont nos contraintes ?"
-     * "Qu'est-ce qui est requis pour le projet ?"
-     * "Montre-moi les exigences du projet"
      * =========================================================
      */
     if (
@@ -139,15 +153,6 @@ export class IntentService {
     /*
      * =========================================================
      * PROJECT REQUIREMENT
-     *
-     * Détection d'une nouvelle exigence à enregistrer.
-     *
-     * Exemples :
-     *
-     * "Il doit être rapidement scalable"
-     * "Nexora doit être sécurisé"
-     * "Il faut une architecture évolutive"
-     * "Le projet nécessite une bonne base"
      * =========================================================
      */
     if (
@@ -171,9 +176,7 @@ export class IntentService {
       normalized.includes('devra') ||
       normalized.includes('devront') ||
       normalized.includes('doivent') ||
-      normalized.includes('devrait') ||
-      normalized.includes('devra pouvoir') ||
-      normalized.includes('doit pouvoir')
+      normalized.includes('devrait')
     ) {
       return {
         intent: BrainIntent.PROJECT_REQUIREMENT,

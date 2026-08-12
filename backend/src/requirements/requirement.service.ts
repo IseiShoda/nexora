@@ -7,15 +7,23 @@ export class RequirementService {
     private readonly prisma: PrismaService,
   ) {}
 
-  /**
-   * Enregistre une nouvelle exigence pour un projet.
+  /*
+   * =========================================================
+   * ADD REQUIREMENT
+   * =========================================================
    */
   async addRequirement(
     project: string,
     requirement: string,
-  ) {
-    const normalizedProject = project.trim();
-    const normalizedRequirement = requirement.trim();
+  ): Promise<{
+    requirement: any;
+    created: boolean;
+  } | null> {
+    const normalizedProject =
+      project.trim();
+
+    const normalizedRequirement =
+      requirement.trim();
 
     if (
       !normalizedProject ||
@@ -24,36 +32,106 @@ export class RequirementService {
       return null;
     }
 
-    const existing =
-      await this.prisma.projectRequirement.findUnique({
+    /*
+     * =======================================================
+     * DUPLICATE DETECTION
+     * =======================================================
+     */
+
+    const requirementKey =
+      this.normalizeRequirementKey(
+        normalizedRequirement,
+      );
+
+    const existingRequirements =
+      await this.prisma.projectRequirement.findMany({
         where: {
-          project_requirement: {
-            project: normalizedProject,
-            requirement: normalizedRequirement,
-          },
+          project: normalizedProject,
+          active: true,
         },
       });
 
+    const existing =
+      existingRequirements.find(
+        (item) =>
+          this.normalizeRequirementKey(
+            item.requirement,
+          ) === requirementKey,
+      );
+
+    /*
+     * =======================================================
+     * EXISTING REQUIREMENT
+     * =======================================================
+     */
+
     if (existing) {
-      return existing;
+      console.log(
+        '[REQUIREMENT EXISTING]',
+        {
+          project: normalizedProject,
+          requirement: normalizedRequirement,
+        },
+      );
+
+      return {
+        requirement: existing,
+        created: false,
+      };
     }
 
-    return this.prisma.projectRequirement.create({
-      data: {
+    /*
+     * =======================================================
+     * CREATE REQUIREMENT
+     * =======================================================
+     *
+     * IMPORTANT :
+     * Ce log nous permet de vérifier exactement
+     * quand Prisma reçoit une nouvelle exigence.
+     */
+
+    console.log(
+      '[REQUIREMENT CREATE]',
+      {
         project: normalizedProject,
         requirement: normalizedRequirement,
       },
-    });
+    );
+
+    const created =
+      await this.prisma.projectRequirement.create({
+        data: {
+          project: normalizedProject,
+          requirement: normalizedRequirement,
+        },
+      });
+
+    console.log(
+      '[REQUIREMENT CREATED]',
+      {
+        id: created.id,
+        project: created.project,
+        requirement: created.requirement,
+      },
+    );
+
+    return {
+      requirement: created,
+      created: true,
+    };
   }
 
-  /**
-   * Récupère toutes les exigences actives
-   * d'un projet.
+  /*
+   * =========================================================
+   * GET REQUIREMENTS
+   * =========================================================
    */
+
   async getRequirements(
     project: string,
   ) {
-    const normalizedProject = project.trim();
+    const normalizedProject =
+      project.trim();
 
     if (!normalizedProject) {
       return [];
@@ -70,16 +148,21 @@ export class RequirementService {
     });
   }
 
-  /**
-   * Vérifie si une exigence existe déjà
-   * pour un projet.
+  /*
+   * =========================================================
+   * REQUIREMENT EXISTS
+   * =========================================================
    */
+
   async requirementExists(
     project: string,
     requirement: string,
   ) {
-    const normalizedProject = project.trim();
-    const normalizedRequirement = requirement.trim();
+    const normalizedProject =
+      project.trim();
+
+    const normalizedRequirement =
+      requirement.trim();
 
     if (
       !normalizedProject ||
@@ -88,27 +171,38 @@ export class RequirementService {
       return false;
     }
 
-    const existing =
-      await this.prisma.projectRequirement.findUnique({
+    const requirementKey =
+      this.normalizeRequirementKey(
+        normalizedRequirement,
+      );
+
+    const existingRequirements =
+      await this.prisma.projectRequirement.findMany({
         where: {
-          project_requirement: {
-            project: normalizedProject,
-            requirement: normalizedRequirement,
-          },
+          project: normalizedProject,
+          active: true,
         },
       });
 
-    return !!existing;
+    return existingRequirements.some(
+      (item) =>
+        this.normalizeRequirementKey(
+          item.requirement,
+        ) === requirementKey,
+    );
   }
 
-  /**
-   * Compte le nombre d'exigences actives
-   * d'un projet.
+  /*
+   * =========================================================
+   * COUNT REQUIREMENTS
+   * =========================================================
    */
+
   async countRequirements(
     project: string,
   ) {
-    const normalizedProject = project.trim();
+    const normalizedProject =
+      project.trim();
 
     if (!normalizedProject) {
       return 0;
@@ -120,5 +214,44 @@ export class RequirementService {
         active: true,
       },
     });
+  }
+
+  /*
+   * =========================================================
+   * REQUIREMENT NORMALIZATION
+   * =========================================================
+   */
+
+  private normalizeRequirementKey(
+    requirement: string,
+  ): string {
+    let normalized =
+      requirement
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[.!?,;:]+$/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    /*
+     * Retire les débuts de phrase.
+     */
+
+    normalized = normalized.replace(
+      /^(et\s+)?(il|elle|le systeme|la plateforme)\s+/,
+      '',
+    );
+
+    /*
+     * Retire un éventuel "et" restant.
+     */
+
+    normalized = normalized.replace(
+      /^et\s+/,
+      '',
+    );
+
+    return normalized.trim();
   }
 }
