@@ -1,62 +1,217 @@
-# NEXORA — PROJECT STATE
+# NEXORA — ÉTAT DU PROJET
 
-> Document de continuité du projet Nexora.
-> Ce fichier constitue la référence rapide permettant de reprendre le développement dans une nouvelle session sans perdre l'état du projet.
+**Projet :** Nexora
+**Description :** The Intelligent Business Operating System
+**Dépôt GitHub :** IseiShoda/nexora
+**Branche principale :** `main`
+**Stack Backend :** NestJS + TypeScript + Prisma + SQLite
+**Stack Frontend :** Next.js + React + TypeScript + Tailwind CSS
+**Dernière mise à jour :** Septembre 2026
 
 ---
 
-## 1. IDENTITÉ DU PROJET
+# 1. VISION DU PROJET
 
-**Nom :** Nexora
+Nexora n'a pas pour objectif de devenir simplement :
 
-**Vision :**
-Construire un véritable **Agent AI**, et non simplement un chatbot.
+* un chatbot ;
+* un assistant conversationnel ;
+* un framework d'agents ;
+* un wrapper autour d'un LLM ;
+* un simple système d'automatisation.
+
+La vision cible est de construire une :
+
+> **Intelligence opérationnelle évolutive**
+
+Nexora doit progressivement être capable de comprendre une situation, raisonner dessus, prendre des décisions, poursuivre des objectifs, construire des plans, agir, observer les résultats, apprendre de ses expériences et faire évoluer ses stratégies.
+
+L'intelligence de Nexora doit donc être construite comme un **système cognitif et opérationnel complet**, et non comme une simple interface conversationnelle.
+
+---
+
+# 2. VISION LONG TERME
+
+L'architecture conceptuelle cible de Nexora est :
+
+```text
+                    ┌───────────────────┐
+                    │   Cognitive Core  │
+                    └─────────┬─────────┘
+                              ↓
+                       ┌─────────────┐
+                       │ Goal Engine │
+                       └──────┬──────┘
+                              ↓
+                    ┌──────────────────┐
+                    │ Planning Engine  │
+                    └────────┬─────────┘
+                             ↓
+                       ┌────────────┐
+                       │Action Engine│
+                       └──────┬─────┘
+                              ↓
+                        ┌───────────┐
+                        │Observation│
+                        └─────┬─────┘
+                              ↓
+                        ┌───────────┐
+                        │ Evaluation│
+                        └─────┬─────┘
+                              ↓
+                        ┌───────────┐
+                        │ Experience│
+                        └─────┬─────┘
+                              ↓
+                         ┌─────────┐
+                         │Evolution│
+                         └────┬────┘
+                              │
+                              └──────────────→ Cognitive Core
+```
+
+La mémoire vivante est transversale à cette architecture.
+
+```text
+                         ┌──────────────────┐
+                         │   Living Memory  │
+                         │                  │
+                         │ Facts            │
+                         │ Decisions        │
+                         │ Experiences      │
+                         │ Errors           │
+                         │ Solutions        │
+                         │ Strategies       │
+                         │ Skills           │
+                         │ Context          │
+                         └────────┬─────────┘
+                                  │
+                                  ↓
+        Cognitive → Goal → Planning → Action
+             ↑                          ↓
+             └── Evolution ← Experience ← Observation
+```
+
+---
+
+# 3. OBJECTIF FONDAMENTAL
 
 Nexora doit progressivement être capable de :
 
-* comprendre les messages ;
-* identifier les intentions ;
-* conserver une mémoire ;
-* comprendre le contexte ;
-* résoudre les références ;
-* prendre des décisions ;
-* enregistrer les exigences d'un projet ;
-* raisonner sur ces informations ;
-* utiliser ultérieurement des modèles d'IA/LLM ;
-* évoluer vers un véritable système d'Agent AI.
-
-### Principe fondamental
-
-**Ne pas brûler les étapes.**
-
-Chaque couche doit être construite, testée et validée avant de passer à la suivante.
-
----
-
-# 2. STACK TECHNIQUE
-
-## Backend
-
-* NestJS
-* TypeScript
-* Prisma
-* SQLite
-
-## Frontend
-
-* Next.js
-* React
-* TypeScript
-* Tailwind CSS
-* App Router
-
-## Base de données
-
-SQLite via Prisma.
+1. Comprendre une demande
+2. Comprendre le contexte
+3. Identifier les éléments importants
+4. Identifier les objectifs
+5. Identifier les exigences
+6. Identifier les contraintes
+7. Identifier les inconnues
+8. Raisonner sur la situation
+9. Identifier les implications
+10. Identifier les dépendances
+11. Prendre une décision
+12. Définir ou poursuivre un objectif
+13. Décomposer un objectif
+14. Construire un plan
+15. Exécuter des actions
+16. Utiliser des outils
+17. Observer les résultats
+18. Évaluer les résultats
+19. Détecter les erreurs
+20. Enregistrer les expériences
+21. Réutiliser les solutions
+22. Améliorer ses stratégies
+23. Faire évoluer son comportement
+24. Réinjecter cette expérience dans les décisions futures
 
 ---
 
-# 3. ARCHITECTURE BACKEND ACTUELLE
+# 4. ARCHITECTURE GLOBALE DE DÉVELOPPEMENT
+
+La progression prévue est :
+
+```text
+FOUNDATION
+    ↓
+MEMORY
+    ↓
+CONTEXT
+    ↓
+INTENT
+    ↓
+DECISION
+    ↓
+REQUIREMENTS
+    ↓
+REASONING
+    ↓
+COGNITIVE CORE
+    ↓
+LLM
+    ↓
+TOOLS
+    ↓
+GOAL ENGINE
+    ↓
+PLANNING ENGINE
+    ↓
+ACTION ENGINE
+    ↓
+AGENT LOOP
+    ↓
+OBSERVATION
+    ↓
+EVALUATION
+    ↓
+EXPERIENCE
+    ↓
+EVOLUTION
+    ↓
+FRONTEND ADVANCED
+    ↓
+SECURITY
+    ↓
+TESTING
+    ↓
+PRIVATE BETA
+    ↓
+PUBLIC BETA
+    ↓
+PRODUCTION
+```
+
+Cette progression est volontairement incrémentale.
+
+Le système existant ne doit pas être détruit pour reconstruire Nexora à zéro.
+
+---
+
+# 5. ÉTAT ACTUEL DU PROJET
+
+## Statut global
+
+**🟡 Architecture cognitive en construction**
+
+Les fondations opérationnelles existent déjà.
+
+Les systèmes suivants sont fonctionnels ou disposent d'une première implémentation :
+
+* Chat
+* Memory
+* Context
+* Intent
+* Brain Decision
+* Requirements
+* Requirement Query
+* Reasoning
+* Cognitive Core
+
+Le Cognitive Core constitue désormais la prochaine couche centrale à développer.
+
+---
+
+# 6. STRUCTURE ACTUELLE DU BACKEND
+
+Structure principale :
 
 ```text
 backend/
@@ -74,769 +229,1460 @@ backend/
     │
     ├── requirements/
     │
-    ├── Prisma/
+    ├── reasoning/
     │
-    └── generated/
-```
-
-Architecture logique actuelle :
-
-```text
-Utilisateur
-    │
-    ▼
-Chat
-    │
-    ▼
-Brain
-    │
-    ├── Intent
-    │
-    ├── Context
-    │
-    ├── Decision
-    │
-    └── Action
-    │
-    ▼
-Réponse Nexora
+    └── core/
+        └── cognitive/
+            ├── cognitive-core.module.ts
+            ├── cognitive-core.service.ts
+            └── cognitive-core.types.ts
 ```
 
 ---
 
-# 4. CHAT
+# 7. STACK TECHNIQUE
 
-Le système de chat est fonctionnel.
+## Backend
 
-Endpoint principal :
+```text
+NestJS
+TypeScript
+Prisma
+SQLite
+```
+
+## Frontend
+
+```text
+Next.js
+React
+TypeScript
+Tailwind CSS
+App Router
+```
+
+---
+
+# 8. CHAT
+
+Le système de Chat constitue actuellement l'interface conversationnelle principale.
+
+Le flux général actuel est :
+
+```text
+User
+ ↓
+Chat
+ ↓
+Brain
+ ↓
+Services cognitifs
+ ↓
+Response
+```
+
+Le endpoint principal de conversation est :
 
 ```text
 POST /chat
 ```
 
-Le système accepte notamment :
-
-```json
-{
-  "message": "Bonjour Nexora",
-  "conversationId": 30
-}
-```
-
-Le ChatService :
-
-1. récupère ou crée une conversation ;
-2. enregistre le message utilisateur ;
-3. traite la mémoire ;
-4. transmet le message au Brain ;
-5. enregistre la réponse de Nexora ;
-6. retourne l'historique.
-
-Endpoint historique :
-
-```text
-GET /chat/history
-```
+Le système possède également une base de gestion de l'historique des conversations.
 
 ---
 
-# 5. MEMORY
+# 9. MEMORY
 
-Le système de mémoire utilisateur existe.
+Le système Memory constitue la première fondation de la mémoire persistante de Nexora.
 
-Modèle Prisma :
+Il permet notamment de conserver des informations utiles à travers les conversations.
 
-```prisma
-model UserMemory {
-  id        Int      @id @default(autoincrement())
-  key       String   @unique
-  value     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-```
+La mémoire doit évoluer progressivement vers une architecture de :
 
-La mémoire permet notamment de conserver des informations comme :
+> **Living Memory**
+
+La Living Memory devra à terme pouvoir conserver différentes catégories d'informations :
 
 ```text
-name
-currentProject
+Facts
+Decisions
+Goals
+Experiences
+Errors
+Solutions
+Strategies
+Skills
+Context
+Preferences
+Relationships
+History
 ```
 
-Le Brain peut ensuite demander ces informations au MemoryService.
+La mémoire ne doit donc pas être considérée uniquement comme :
+
+> "historique de conversation"
+
+mais comme une **mémoire opérationnelle exploitable par le système cognitif**.
 
 ---
 
-# 6. CONTEXT
+# 10. CONTEXT
 
-Le système de contexte existe.
+`ContextService` permet actuellement de reconstruire le contexte pertinent d'une conversation.
 
-Le ContextService construit un contexte à partir de la conversation.
+Le contexte doit progressivement devenir une représentation structurée de la situation courante.
 
-Le contexte peut notamment contenir :
-
-```text
-activeTopic
-references
-relevance
-```
-
-Exemple validé :
+Conceptuellement :
 
 ```text
-Chrono Solar
+Conversation
+      ↓
+Context
+      ↓
+Current Situation
+      ↓
+Cognitive Core
 ```
 
-comme sujet actif.
+Le contexte pourra progressivement contenir :
 
-Le système est capable de comprendre :
-
-```text
-"Il doit être rapidement scalable"
-```
-
-et de résoudre :
-
-```text
-"il"
-```
-
-vers :
-
-```text
-Chrono Solar
-```
+* sujet actif ;
+* objectifs ;
+* exigences ;
+* décisions ;
+* contraintes ;
+* entités ;
+* historique pertinent ;
+* état du projet ;
+* actions précédentes ;
+* résultats précédents.
 
 ---
 
-# 7. INTENT SYSTEM
+# 11. INTENT SERVICE
 
-Le système d'intentions est fonctionnel.
+`IntentService` est actuellement un système de détection d'intention basé principalement sur des règles.
 
-Intentions actuellement définies :
+Les intentions existantes comprennent notamment :
 
 ```typescript
-export enum BrainIntent {
-  GREETING = 'GREETING',
-  NEXORA_IDENTITY = 'NEXORA_IDENTITY',
-  USER_NAME = 'USER_NAME',
-  USER_PROJECT = 'USER_PROJECT',
-  PROJECT_REQUIREMENT = 'PROJECT_REQUIREMENT',
-  PROJECT_REQUIREMENTS_QUERY = 'PROJECT_REQUIREMENTS_QUERY',
-  UNKNOWN = 'UNKNOWN',
-}
+GREETING
+NEXORA_IDENTITY
+USER_NAME
+USER_PROJECT
+PROJECT_REQUIREMENT
+PROJECT_REQUIREMENTS_QUERY
+UNKNOWN
 ```
 
-Le système normalise les messages avant analyse.
+Le système utilise notamment la normalisation et des règles lexicales.
+
+Une protection existe également afin d'éviter qu'une question soit automatiquement interprétée comme une nouvelle exigence.
 
 Exemple :
 
 ```text
-Il doit être rapidement scalable
+Pourquoi Chrono Solar doit-il supporter 100 000 utilisateurs tout en restant rapide ?
 ```
 
-devient approximativement :
+Cette phrase est une question et ne doit pas être enregistrée automatiquement comme une nouvelle exigence.
+
+## Limite actuelle
+
+Le système Intent ne doit pas continuer à devenir une énorme collection de règles.
+
+À terme :
 
 ```text
-il doit etre rapidement scalable
+IntentService
+      ↓
+Understanding
+      ↓
+Cognitive Core
 ```
 
-L'intention détectée :
+`IntentService` doit devenir progressivement une capacité spécialisée utilisée par le Cognitive Core.
+
+---
+
+# 12. BRAIN DECISION SERVICE
+
+`BrainDecisionService` constitue actuellement la couche permettant de transformer une intention et son contexte en décision opérationnelle.
+
+Les actions existantes comprennent notamment :
+
+```typescript
+ANSWER
+CONTINUE_CONTEXT
+ASK_CLARIFICATION
+```
+
+À terme, cette capacité doit être intégrée dans le composant :
 
 ```text
-PROJECT_REQUIREMENT
+Cognitive Core
+      ↓
+Decision
+```
+
+Le service existant ne doit pas être supprimé brutalement.
+
+Il doit être réutilisé puis progressivement enrichi.
+
+---
+
+# 13. REQUIREMENTS
+
+Le système de Requirements est fonctionnel.
+
+Il permet notamment :
+
+* la détection des exigences ;
+* la normalisation ;
+* la détection des doublons ;
+* la création ;
+* la consultation ;
+* la conservation des exigences du projet.
+
+Le `RequirementService` possède déjà une logique de détection des doublons normalisés.
+
+Il constitue une capacité métier spécialisée qui pourra être appelée par le Cognitive Core.
+
+Architecture cible :
+
+```text
+User Input
+     ↓
+Cognitive Core
+     ↓
+Understanding
+     ↓
+Requirement Detection
+     ↓
+RequirementService
+     ↓
+Living Memory
+```
+
+---
+
+# 14. REASONING ENGINE
+
+`ReasoningService` constitue la première version du moteur de raisonnement de Nexora.
+
+Il est actuellement déterministe et basé sur des règles.
+
+Il permet notamment d'identifier :
+
+```text
+Requirements
+Scalability
+Target Load
+Security
+Performance
+Dependencies
+Facts
+Inferences
+Implications
+Unknowns
+Questions
+```
+
+Il peut par exemple analyser :
+
+```text
+Chrono Solar doit supporter 100 000 utilisateurs tout en restant rapide.
+```
+
+et identifier :
+
+```text
+Target Load:
+100 000 utilisateurs
+
+Implication:
+L'architecture doit pouvoir absorber cette charge.
+
+Implication:
+Une capacité de planification est nécessaire.
+
+Dependencies:
+Architecture
+Infrastructure
+Base de données
+Capacity Planning
+Performance
+```
+
+## Types actuels
+
+```typescript
+FACT
+REQUIREMENT
+GOAL
+CONSTRAINT
+DECISION
+QUESTION
+UNKNOWN
+```
+
+## ReasoningResult
+
+La structure actuelle contient notamment :
+
+```typescript
+subject
+type
+facts
+inferences
+unknowns
+implications
+dependencies
+questions
+```
+
+## Principe
+
+Le `ReasoningService` ne doit pas être remplacé.
+
+Il doit devenir une **capacité de raisonnement spécialisée du Cognitive Core**.
+
+---
+
+# 15. PROBLÈME ACTUEL IDENTIFIÉ
+
+Une question comme :
+
+```text
+Pourquoi Chrono Solar doit-il supporter 100 000 utilisateurs tout en restant rapide ?
+```
+
+peut actuellement être classifiée comme :
+
+```text
+UNKNOWN
+```
+
+par `IntentService`.
+
+Ce comportement montre une limite du modèle actuel :
+
+```text
+Intent
+↓
+Action
+```
+
+Nexora doit évoluer vers :
+
+```text
+Input
+ ↓
+Understanding
+ ↓
+Reasoning
+ ↓
+Decision
+```
+
+Une question ne doit donc pas nécessairement être traitée comme une simple intention isolée.
+
+Elle doit pouvoir être comprise en fonction :
+
+* du sujet ;
+* du contexte ;
+* des faits connus ;
+* des exigences existantes ;
+* des objectifs ;
+* des dépendances ;
+* des connaissances mémorisées.
+
+---
+
+# 16. COGNITIVE CORE
+
+## Statut
+
+**🟡 Implémentation initiale**
+
+Le Cognitive Core constitue désormais le noyau cognitif de Nexora.
+
+Il ne doit pas être simplement un nouveau service parallèle.
+
+Sa vocation est de devenir progressivement le **centre de compréhension, de raisonnement et de décision** de Nexora.
+
+---
+
+# 17. CONTRAT DU COGNITIVE CORE
+
+Le Cognitive Core utilise actuellement le concept :
+
+```text
+CognitiveInput
+        ↓
+Cognitive Core
+        ↓
+CognitiveOutput
+```
+
+## CognitiveInput
+
+```typescript
+export interface CognitiveInput {
+  message: string;
+  conversationId?: string;
+  userId?: string;
+  metadata?: Record<string, unknown>;
+}
+```
+
+Le système peut donc recevoir :
+
+* le message ;
+* l'identifiant de conversation ;
+* l'utilisateur ;
+* des métadonnées supplémentaires.
+
+---
+
+# 18. UNDERSTANDING
+
+Le premier niveau du Cognitive Core est :
+
+```text
+Understanding
+```
+
+Structure :
+
+```typescript
+export interface Understanding {
+  intent: string;
+  confidence: number;
+  subject?: string;
+  entities: string[];
+  references: string[];
+}
+```
+
+Son rôle est de répondre à :
+
+> "Qu'est-ce qui est en train de se passer ?"
+
+Le système commence actuellement par identifier notamment :
+
+```text
+Requirement
+Goal
+Question
+Unknown
+```
+
+Le système est volontairement simple à cette étape.
+
+Il sera progressivement remplacé ou enrichi par l'intégration des capacités existantes.
+
+---
+
+# 19. REASONING DU COGNITIVE CORE
+
+Structure actuelle :
+
+```typescript
+export interface Reasoning {
+  facts: string[];
+  inferences: string[];
+  unknowns: string[];
+  implications: string[];
+  dependencies: string[];
+}
+```
+
+Le Cognitive Core doit progressivement devenir capable de produire une représentation beaucoup plus riche de la situation.
+
+Architecture cible :
+
+```text
+Understanding
+      ↓
+Facts
+      ↓
+Inference
+      ↓
+Implications
+      ↓
+Dependencies
+      ↓
+Unknowns
+      ↓
+Reasoning State
+```
+
+Le `ReasoningService` existant sera utilisé comme capacité spécialisée.
+
+---
+
+# 20. DECISION DU COGNITIVE CORE
+
+Structure actuelle :
+
+```typescript
+export interface Decision {
+  action: string;
+  reason: string;
+  confidence: number;
+}
+```
+
+Le système peut actuellement produire des décisions telles que :
+
+```text
+ASK_CLARIFICATION
+PROCESS_GOAL
+PROCESS_REQUIREMENT
+ANSWER
+CONTINUE
+```
+
+À terme, les décisions devront pouvoir être beaucoup plus opérationnelles :
+
+```text
+ANSWER
+ASK_CLARIFICATION
+STORE_MEMORY
+CREATE_REQUIREMENT
+UPDATE_REQUIREMENT
+CREATE_GOAL
+UPDATE_GOAL
+CREATE_PLAN
+EXECUTE_ACTION
+USE_TOOL
+OBSERVE
+EVALUATE
+ESCALATE
+WAIT
+```
+
+---
+
+# 21. COGNITIVE OUTPUT
+
+Le contrat actuel est :
+
+```typescript
+export interface CognitiveOutput {
+  input: CognitiveInput;
+  understanding: Understanding;
+  reasoning: Reasoning;
+  decision: Decision;
+}
+```
+
+Il représente le premier véritable contrat cognitif de Nexora.
+
+Architecture :
+
+```text
+                     Cognitive Core
+                           │
+          ┌────────────────┼────────────────┐
+          ↓                ↓                ↓
+   Understanding      Reasoning         Decision
+          │                │                │
+          └────────────────┼────────────────┘
+                           ↓
+                  CognitiveOutput
+```
+
+---
+
+# 22. PRINCIPE D'IMPLÉMENTATION DU COGNITIVE CORE
+
+Le Cognitive Core doit progressivement absorber l'orchestration des capacités cognitives existantes.
+
+Architecture immédiate cible :
+
+```text
+Chat
+ ↓
+Brain
+ ↓
+Cognitive Core
+ ↓
+┌─────────────────────┬─────────────────────┬─────────────────────┐
+│                     │                     │
+Understanding       Reasoning             Decision
+│                     │                     │
+↓                     ↓                     ↓
+IntentService       ReasoningService     BrainDecisionService
+│                     │                     │
+└─────────────────────┴─────────────────────┘
+                      ↓
+                CognitiveOutput
+```
+
+Le `ContextService` intervient également dans la compréhension et le raisonnement :
+
+```text
+Cognitive Core
+      ↓
+ContextService
+      ↓
+Current Context
+      ↓
+Understanding + Reasoning
+```
+
+---
+
+# 23. RÈGLE ARCHITECTURALE IMPORTANTE
+
+Le Cognitive Core ne doit **pas** dépendre de `BrainService`.
+
+La direction des dépendances doit être :
+
+```text
+Brain
+  ↓
+Cognitive Core
+  ↓
+Specialized Cognitive Services
+```
+
+et non :
+
+```text
+Cognitive Core
+  ↓
+Brain
+```
+
+Cela permet d'éviter une dépendance circulaire et permet au Cognitive Core de devenir progressivement le véritable centre cognitif.
+
+---
+
+# 24. BRAIN — ÉVOLUTION PRÉVUE
+
+`BrainService` est actuellement important et contient encore une grande partie de la logique d'orchestration.
+
+Il ne doit pas être réécrit brutalement.
+
+Approche prévue :
+
+```text
+PHASE 1
+Brain
+ ↓
+Cognitive Core
+ ↓
+Existing Services
+```
+
+Puis progressivement :
+
+```text
+PHASE 2
+
+Brain
+ ↓
+Cognitive Core
+ ↓
+Goal / Planning / Action
+```
+
+Enfin :
+
+```text
+PHASE 3
+
+Chat
+ ↓
+Operational Intelligence
+ ↓
+Cognitive Core
+```
+
+Le rôle de `BrainService` pourra alors devenir progressivement plus léger.
+
+---
+
+# 25. LLM
+
+L'intégration d'un LLM n'est volontairement **pas la priorité immédiate**.
+
+Principe architectural :
+
+> Le LLM ne doit pas être Nexora.
+
+Le LLM doit devenir une capacité utilisée par Nexora.
+
+Architecture future :
+
+```text
+                    Cognitive Core
+                          │
+        ┌─────────────────┼─────────────────┐
+        ↓                 ↓                 ↓
+ Understanding        Reasoning          Decision
+        │                 │                 │
+        └────────────┬────┴─────┬───────────┘
+                     ↓
+                    LLM
+                     ↓
+              Advanced Cognition
+```
+
+Le système déterministe doit donc être suffisamment structuré avant de donner au LLM un rôle central.
+
+---
+
+# 26. GOAL ENGINE
+
+Le Goal Engine constitue la prochaine grande couche après la stabilisation du Cognitive Core.
+
+Son rôle sera de transformer :
+
+```text
+Understanding
++
+Reasoning
++
+Decision
+```
+
+en :
+
+```text
+Goal
+```
+
+Un objectif pourra posséder :
+
+```text
+ID
+Title
+Description
+Priority
+Status
+Deadline
+Constraints
+Dependencies
+Progress
+Success Criteria
+Context
+```
+
+Exemple :
+
+```text
+Goal:
+Faire supporter 100 000 utilisateurs à Chrono Solar.
+
+Success Criteria:
+- 100 000 utilisateurs simultanés
+- temps de réponse acceptable
+- aucune dégradation critique
+```
+
+---
+
+# 27. PLANNING ENGINE
+
+Le Planning Engine devra transformer un objectif en plan.
+
+```text
+Goal
+ ↓
+Planning Engine
+ ↓
+Plan
+ ↓
+Tasks
+```
+
+Exemple :
+
+```text
+Goal:
+Supporter 100 000 utilisateurs
+
+Plan:
+1. Analyser l'architecture actuelle
+2. Identifier les bottlenecks
+3. Mesurer la capacité actuelle
+4. Définir l'architecture cible
+5. Tester la base de données
+6. Tester la charge
+7. Optimiser
+8. Valider
+```
+
+---
+
+# 28. ACTION ENGINE
+
+L'Action Engine permettra à Nexora d'exécuter les tâches.
+
+```text
+Plan
+ ↓
+Action Engine
+ ↓
+Tool / API / Service
+ ↓
+Result
+```
+
+Les actions pourront éventuellement utiliser :
+
+* API ;
+* fichiers ;
+* bases de données ;
+* navigateur ;
+* outils internes ;
+* services externes ;
+* scripts ;
+* applications.
+
+---
+
+# 29. OBSERVATION
+
+Après une action, Nexora doit observer le résultat.
+
+```text
+Action
+ ↓
+Result
+ ↓
+Observation
+```
+
+L'observation doit être structurée.
+
+Exemple :
+
+```text
+Action:
+Test de charge
+
+Observation:
+Le système commence à ralentir à 72 000 utilisateurs.
+
+Signal:
+Performance degradation
+
+Threshold:
+72 000
+```
+
+---
+
+# 30. EVALUATION
+
+L'évaluation permet de déterminer si l'action a fonctionné.
+
+```text
+Goal
+ +
+Expected Result
+ +
+Observation
+ ↓
+Evaluation
+```
+
+Exemple :
+
+```text
+Goal:
+100 000 utilisateurs
+
+Observation:
+72 000 utilisateurs maximum
+
+Evaluation:
+FAILED
+
+Reason:
+Infrastructure insuffisante
+```
+
+---
+
+# 31. EXPERIENCE ENGINE
+
+Une évaluation doit pouvoir produire une expérience.
+
+```text
+Observation
+ ↓
+Evaluation
+ ↓
+Experience
+```
+
+Exemple :
+
+```text
+Experience:
+
+Lorsqu'une architecture donnée dépasse 72 000 utilisateurs,
+la base de données devient le principal bottleneck.
+```
+
+Cette expérience doit pouvoir être mémorisée.
+
+---
+
+# 32. EVOLUTION ENGINE
+
+L'évolution transforme les expériences en amélioration future.
+
+```text
+Experience
+ ↓
+Evolution
+ ↓
+Strategy Update
+ ↓
+Future Decision
+```
+
+Exemple :
+
+```text
+Experience:
+Database bottleneck à 72 000 utilisateurs
+
+Evolution:
+Privilégier une architecture database scalable
+lors de futurs projets similaires.
+```
+
+---
+
+# 33. LIVING MEMORY
+
+La Living Memory doit devenir le système permettant à Nexora de conserver ce qu'il apprend.
+
+Architecture cible :
+
+```text
+                   Living Memory
+                         │
+       ┌─────────────────┼─────────────────┐
+       ↓                 ↓                 ↓
+     Facts           Decisions        Experiences
+       ↓                 ↓                 ↓
+     Errors          Solutions        Strategies
+       ↓                 ↓                 ↓
+    Context           Skills          Knowledge
+```
+
+La mémoire doit être accessible aux différents moteurs :
+
+```text
+Cognitive Core
+Goal Engine
+Planning Engine
+Action Engine
+Observation
+Evaluation
+Experience
+Evolution
+```
+
+---
+
+# 34. ARCHITECTURE COGNITIVE CIBLE
+
+À maturité :
+
+```text
+                         USER
+                           ↓
+                         CHAT
+                           ↓
+                   ┌───────────────┐
+                   │ Cognitive Core│
+                   └───────┬───────┘
+                           ↓
+                 ┌──────────────────┐
+                 │   Understanding  │
+                 └────────┬─────────┘
+                          ↓
+                 ┌──────────────────┐
+                 │     Reasoning    │
+                 └────────┬─────────┘
+                          ↓
+                 ┌──────────────────┐
+                 │     Decision     │
+                 └────────┬─────────┘
+                          ↓
+                    ┌────────────┐
+                    │ Goal Engine│
+                    └─────┬──────┘
+                          ↓
+                  ┌───────────────┐
+                  │Planning Engine│
+                  └───────┬───────┘
+                          ↓
+                    ┌───────────┐
+                    │Action Engine│
+                    └─────┬─────┘
+                          ↓
+                      ACTION
+                          ↓
+                    OBSERVATION
+                          ↓
+                     EVALUATION
+                          ↓
+                     EXPERIENCE
+                          ↓
+                      EVOLUTION
+                          ↓
+                   LIVING MEMORY
+                          ↓
+                   Cognitive Core
+```
+
+---
+
+# 35. MODULES FUTURS
+
+Les futurs modules principaux seront progressivement :
+
+```text
+core/
+├── cognitive/
+├── goals/
+├── planning/
+├── actions/
+├── observation/
+├── evaluation/
+├── experience/
+└── evolution/
+```
+
+Avec éventuellement :
+
+```text
+tools/
+knowledge/
+security/
+orchestration/
+```
+
+---
+
+# 36. PRINCIPES DE DÉVELOPPEMENT
+
+## Principe 1 — Pas de Big Bang
+
+Ne jamais réécrire tout Nexora en une seule étape.
+
+Chaque couche doit être introduite progressivement.
+
+---
+
+## Principe 2 — Préserver l'existant
+
+Les services existants sont des capacités utiles.
+
+Ils doivent être intégrés avant d'être remplacés.
+
+---
+
+## Principe 3 — Cognitive Core central
+
+Le Cognitive Core doit progressivement devenir le centre de la cognition.
+
+---
+
+## Principe 4 — LLM ≠ Intelligence complète
+
+Le LLM est une capacité.
+
+Il ne doit pas remplacer :
+
+* Memory ;
+* Context ;
+* Reasoning ;
+* Decision ;
+* Goals ;
+* Planning ;
+* Actions ;
+* Evaluation ;
+* Experience ;
+* Evolution.
+
+---
+
+## Principe 5 — Tout doit être structuré
+
+Nexora doit progressivement produire des données structurées plutôt que des réponses textuelles uniquement.
+
+---
+
+## Principe 6 — Traçabilité
+
+Les décisions importantes doivent pouvoir être expliquées par :
+
+```text
+Input
+ ↓
+Context
+ ↓
+Understanding
+ ↓
+Reasoning
+ ↓
+Decision
+```
+
+---
+
+## Principe 7 — Évolution contrôlée
+
+Nexora ne doit pas simplement "apprendre".
+
+Il doit pouvoir :
+
+```text
+Observe
+ ↓
+Evaluate
+ ↓
+Store Experience
+ ↓
+Identify Pattern
+ ↓
+Update Strategy
+```
+
+---
+
+# 37. ÉTAT DES COMPOSANTS
+
+| Composant         | Statut | Rôle                              |
+| ----------------- | ------ | --------------------------------- |
+| Chat              | 🟢     | Interface conversationnelle       |
+| Memory            | 🟢     | Mémoire persistante initiale      |
+| Context           | 🟢     | Gestion du contexte               |
+| Intent            | 🟡     | Détection d'intention par règles  |
+| Brain Decision    | 🟡     | Décision initiale                 |
+| Requirements      | 🟢     | Gestion des exigences             |
+| Requirement Query | 🟢     | Consultation des exigences        |
+| Reasoning         | 🟡     | Raisonnement déterministe initial |
+| Cognitive Core    | 🟡     | Nouveau noyau cognitif            |
+| LLM               | ⚪      | Pas encore intégré                |
+| Goal Engine       | ⚪      | À construire                      |
+| Planning Engine   | ⚪      | À construire                      |
+| Action Engine     | ⚪      | À construire                      |
+| Observation       | ⚪      | À construire                      |
+| Evaluation        | ⚪      | À construire                      |
+| Experience        | ⚪      | À construire                      |
+| Evolution         | ⚪      | À construire                      |
+| Advanced Frontend | ⚪      | À construire                      |
+| Security          | ⚪      | À renforcer                       |
+| Testing           | 🟡     | À développer progressivement      |
+
+Légende :
+
+```text
+🟢 Fonctionnel
+🟡 En développement
+⚪ Non commencé
+```
+
+---
+
+# 38. DERNIER CHECKPOINT GIT
+
+Le dernier checkpoint important du Cognitive Core est :
+
+```text
+Commit:
+4e35a2d
+
+Message:
+feat: establish cognitive core contract
+```
+
+Ce commit correspond à la mise en place du contrat initial :
+
+```text
+CognitiveInput
+      ↓
+Cognitive Core
+      ↓
+CognitiveOutput
 ```
 
 avec :
 
 ```text
-confidence: 0.9
+Understanding
+Reasoning
+Decision
 ```
 
 ---
 
-# 8. BRAIN DECISION SYSTEM
+# 39. PROCHAINE ÉTAPE IMMÉDIATE
 
-Le Brain possède maintenant un système de décision.
+La prochaine étape de développement est :
 
-Actions disponibles :
+> **Intégrer les capacités cognitives existantes dans le Cognitive Core.**
 
-```typescript
-export enum BrainAction {
-  ANSWER = 'ANSWER',
-  CONTINUE_CONTEXT = 'CONTINUE_CONTEXT',
-  ASK_CLARIFICATION = 'ASK_CLARIFICATION',
-}
-```
-
-Principe :
+Services concernés :
 
 ```text
-Intent
-   │
-   ▼
+IntentService
+ContextService
+ReasoningService
 BrainDecisionService
-   │
-   ├── ANSWER
-   ├── CONTINUE_CONTEXT
-   └── ASK_CLARIFICATION
-```
-
-Une intention connue provoque actuellement :
-
-```text
-ANSWER
-```
-
-Une intention inconnue mais avec un contexte pertinent peut provoquer :
-
-```text
-CONTINUE_CONTEXT
-```
-
-Sinon :
-
-```text
-ASK_CLARIFICATION
-```
-
----
-
-# 9. PROJECT REQUIREMENTS
-
-Le système de gestion des exigences de projet a été ajouté.
-
-Modèle Prisma :
-
-```prisma
-model ProjectRequirement {
-  id          Int      @id @default(autoincrement())
-  project     String
-  requirement String
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@unique([project, requirement])
-  @@index([project])
-}
-```
-
-Le RequirementService permet notamment :
-
-```text
-addRequirement()
-getRequirements()
-requirementExists()
-```
-
----
-
-# 10. EXIGENCE VALIDÉE
-
-Test effectué :
-
-```text
-Il doit être rapidement scalable
-```
-
-Contexte :
-
-```text
-Chrono Solar
-```
-
-Résultat du Brain :
-
-```text
-[INTENT] Intent:
-PROJECT_REQUIREMENT
-
-confidence:
-0.9
-
-[BRAIN] Decision:
-PROJECT_REQUIREMENT
-
-action:
-ANSWER
-
-topic:
-Chrono Solar
-```
-
-Réponse obtenue :
-
-```text
-J'ai enregistré cette exigence pour "Chrono Solar" :
-"doit être rapidement scalable".
-```
-
-L'exigence est désormais enregistrée dans la base de données.
-
----
-
-# 11. QUERY DES EXIGENCES
-
-Une intention supplémentaire a ensuite été ajoutée :
-
-```text
-PROJECT_REQUIREMENTS_QUERY
-```
-
-Test effectué :
-
-```text
-Quelles sont les exigences de Chrono Solar ?
-```
-
-Résultat validé :
-
-```text
-[INTENT]
-PROJECT_REQUIREMENTS_QUERY
-
-confidence:
-0.95
-
-[BRAIN] Decision:
-PROJECT_REQUIREMENTS_QUERY
-
-action:
-ANSWER
-
-topic:
-Chrono Solar
-```
-
-Nexora retourne alors les exigences enregistrées pour le projet.
-
----
-
-# 12. PRISMA — STRUCTURE ACTUELLE
-
-La base contient actuellement :
-
-```text
-Conversation
-Message
-UserMemory
-ProjectRequirement
-```
-
-Relations principales :
-
-```text
-Conversation
-    │
-    └── Messages
-
-ProjectRequirement
-    │
-    └── Project
-```
-
----
-
-# 13. TESTS TECHNIQUES VALIDÉS
-
-Le backend compile actuellement sans erreur.
-
-Commande :
-
-```powershell
-npm run build
-```
-
-Résultat :
-
-```text
-0 error
-```
-
-Le serveur NestJS démarre correctement.
-
-Port actuel :
-
-```text
-3001
-```
-
-Endpoint :
-
-```text
-http://localhost:3001/chat
-```
-
----
-
-# 14. PROBLÈME IMPORTANT RENCONTRÉ ET RÉSOLU
-
-Un problème d'encodage Unicode a été rencontré avec les caractères accentués.
-
-Exemple affiché dans certains logs :
-
-```text
-Il doit �tre rapidement scalable
-```
-
-Le système de normalisation a été renforcé afin de continuer à reconnaître correctement les intentions malgré ce problème.
-
-Le test final a confirmé :
-
-```text
-PROJECT_REQUIREMENT
-```
-
----
-
-# 15. GIT
-
-Branche actuelle :
-
-```text
-main
-```
-
-Dépôt distant :
-
-```text
-origin/main
-```
-
-Dernier état connu :
-
-```text
-working tree clean
-```
-
-Aucune modification non commitée au dernier contrôle.
-
----
-
-# 16. ÉTAPES DÉJÀ RÉALISÉES
-
-## Fondations
-
-* [x] Création du projet Nexora
-* [x] Configuration Git
-* [x] Backend NestJS
-* [x] Frontend Next.js
-* [x] Communication frontend/backend
-* [x] Chat de base
-* [x] Conversations
-* [x] Historique
-
-## Mémoire
-
-* [x] UserMemory
-* [x] MemoryService
-* [x] récupération des informations mémorisées
-
-## Contexte
-
-* [x] ContextService
-* [x] activeTopic
-* [x] références
-* [x] résolution contextuelle
-
-## Brain
-
-* [x] IntentService
-* [x] BrainIntent
-* [x] BrainDecisionService
-* [x] BrainAction
-* [x] BrainService
-* [x] système ANSWER / CONTINUE_CONTEXT / ASK_CLARIFICATION
-
-## Requirements
-
-* [x] Prisma ProjectRequirement
-* [x] RequirementService
-* [x] enregistrement d'une exigence
-* [x] vérification d'existence
-* [x] récupération des exigences
-* [x] PROJECT_REQUIREMENT
-* [x] PROJECT_REQUIREMENTS_QUERY
-
----
-
-# 17. CE QUI N'EST PAS ENCORE FAIT
-
-Les éléments suivants ne doivent PAS être considérés comme terminés.
-
-## Reasoning
-
-* [ ] système de raisonnement structuré
-* [ ] décomposition des problèmes
-* [ ] raisonnement multi-étapes
-* [ ] dépendances entre exigences
-* [ ] priorisation
-* [ ] contradictions
-* [ ] validation logique
-
-## Intelligence
-
-* [ ] intégration d'un LLM
-* [ ] sélection du modèle
-* [ ] système de prompts
-* [ ] mémoire sémantique
-* [ ] embeddings
-* [ ] recherche vectorielle
-* [ ] RAG
-* [ ] outils utilisables par l'Agent
-
-## Agent
-
-* [ ] boucle Agent
-* [ ] planification
-* [ ] exécution d'actions
-* [ ] observation des résultats
-* [ ] correction
-* [ ] autonomie contrôlée
-
-## Frontend
-
-* [ ] interface Nexora complète
-* [ ] affichage avancé du raisonnement
-* [ ] gestion des projets
-* [ ] visualisation des exigences
-* [ ] interface Agent
-* [ ] système de notifications
-* [ ] UX finale
-
-## Sécurité
-
-* [ ] authentification
-* [ ] autorisation
-* [ ] isolation des données utilisateur
-* [ ] sécurité API
-* [ ] gestion des secrets
-* [ ] rate limiting
-* [ ] logs de sécurité
-
-## Production
-
-* [ ] environnement production
-* [ ] infrastructure
-* [ ] monitoring
-* [ ] sauvegardes
-* [ ] tests automatisés
-* [ ] CI/CD
-* [ ] beta privée
-* [ ] beta publique
-* [ ] lancement
-
----
-
-# 18. ORDRE DE DÉVELOPPEMENT
-
-L'ordre doit rester progressif.
-
-```text
-FOUNDATION
-    ↓
-MEMORY
-    ↓
-CONTEXT
-    ↓
-INTENT
-    ↓
-DECISION
-    ↓
-REQUIREMENTS
-    ↓
-REASONING
-    ↓
-LLM
-    ↓
-TOOLS
-    ↓
-AGENT LOOP
-    ↓
-FRONTEND ADVANCED
-    ↓
-SECURITY
-    ↓
-TESTING
-    ↓
-PRIVATE BETA
-    ↓
-PUBLIC BETA
-    ↓
-PRODUCTION
-```
-
----
-
-# 19. RÈGLES DE DÉVELOPPEMENT NEXORA
-
-## Règle 1
-
-Ne pas brûler les étapes.
-
-## Règle 2
-
-Ne pas ajouter une technologie uniquement parce qu'elle est intéressante.
-
-## Règle 3
-
-Chaque nouvelle couche doit être testée avant d'ajouter la suivante.
-
-## Règle 4
-
-Une fonctionnalité validée ne doit pas être cassée par une nouvelle étape.
-
-## Règle 5
-
-Le code doit rester modulaire.
-
-## Règle 6
-
-Le Brain ne doit pas devenir un énorme fichier contenant toute l'intelligence.
-
-## Règle 7
-
-L'IA/LLM doit être introduite lorsque l'architecture est suffisamment prête à l'accueillir.
-
-## Règle 8
-
-Nexora doit évoluer vers un Agent AI véritable, pas simplement vers un chatbot avec un LLM.
-
----
-
-# 20. PHILOSOPHIE DU PROJET
-
-Nexora doit progressivement passer de :
-
-```text
-Chatbot
-```
-
-à :
-
-```text
-Assistant
-```
-
-puis :
-
-```text
-Copilote
-```
-
-puis :
-
-```text
-Agent
-```
-
-puis :
-
-```text
-Agent AI capable de comprendre,
-raisonner, planifier et agir.
-```
-
-Chaque transition doit être construite sur la précédente.
-
----
-
-# 21. PROCHAINE ÉTAPE
-
-La prochaine grande étape est :
-
-```text
-REASONING ENGINE
 ```
 
 Objectif :
 
-Permettre à Nexora de ne plus seulement reconnaître une exigence, mais de commencer à **comprendre ses implications**.
-
-Exemple :
-
 ```text
-Utilisateur :
-"Chrono Solar doit être rapidement scalable."
-
-Nexora :
-→ identifie l'exigence
-→ identifie le projet
-→ catégorise l'exigence
-→ identifie les implications
-→ identifie les éventuelles contraintes
-→ identifie les décisions nécessaires
-→ conserve ces informations
+CognitiveInput
+      ↓
+Cognitive Core
+      ↓
+Context
+      ↓
+Understanding
+      ↓
+Reasoning
+      ↓
+Decision
+      ↓
+CognitiveOutput
 ```
 
-Cette étape doit être construite avant l'intégration complète d'un LLM.
+Important :
+
+* ne pas supprimer `IntentService` ;
+* ne pas supprimer `ReasoningService` ;
+* ne pas supprimer `ContextService` ;
+* ne pas supprimer `BrainDecisionService` ;
+* ne pas réécrire immédiatement `BrainService` ;
+* ne pas intégrer immédiatement le LLM ;
+* éviter toute dépendance circulaire.
 
 ---
 
-# 22. ÉTAT ACTUEL
+# 40. PROGRESSION IMMÉDIATE PRÉVUE
+
+La séquence de travail recommandée est :
 
 ```text
-NEXORA STATUS
-=============
-
-Backend             ✅
-Frontend base       ✅
-Chat                ✅
-Memory              ✅
-Context             ✅
-Intent              ✅
-Decision            ✅
-Requirements        ✅
-Requirement Query   ✅
-
-Reasoning           ⏳
-LLM                 ⏳
-RAG                 ⏳
-Tools               ⏳
-Agent               ⏳
-Advanced UI         ⏳
-Security            ⏳
-Testing             ⏳
-Beta                ⏳
-Production          ⏳
+1. Stabiliser CognitiveOutput
+        ↓
+2. Intégrer ContextService
+        ↓
+3. Intégrer IntentService
+        ↓
+4. Intégrer ReasoningService
+        ↓
+5. Intégrer BrainDecisionService
+        ↓
+6. Faire consommer CognitiveOutput par Brain
+        ↓
+7. Réduire progressivement la logique cognitive de Brain
+        ↓
+8. Stabiliser Cognitive Core
+        ↓
+9. Construire Goal Engine
+        ↓
+10. Construire Planning Engine
+        ↓
+11. Construire Action Engine
+        ↓
+12. Construire Observation
+        ↓
+13. Construire Evaluation
+        ↓
+14. Construire Experience
+        ↓
+15. Construire Evolution
 ```
 
 ---
 
-# 23. CONTINUITÉ DES SESSIONS
+# 41. WORKFLOW OBLIGATOIRE POUR CHAQUE ÉTAPE
 
-Si une nouvelle conversation est nécessaire, utiliser ce fichier comme référence principale.
+Chaque évolution du projet doit suivre ce format :
 
-Commande de reprise :
+## 1. OBJECTIF
+
+Définir précisément ce qui doit être construit.
+
+## 2. FICHIERS À MODIFIER
+
+Lister précisément les fichiers concernés.
+
+## 3. CODE COMPLET À COPIER
+
+Fournir le contenu complet des fichiers modifiés.
+
+Éviter les extraits incomplets lorsque cela risque de provoquer des erreurs.
+
+## 4. TEST EXACT À FAIRE
+
+Donner les commandes exactes à exécuter.
+
+## 5. LOG ATTENDU
+
+Indiquer précisément ce que l'utilisateur doit observer.
+
+## 6. VALIDATION
+
+Confirmer que l'étape est correcte avant de continuer.
+
+## 7. GIT COMMIT
+
+Donner la commande exacte :
+
+```bash
+git add ...
+git commit -m "..."
+git push origin main
+```
+
+## 8. MISE À JOUR NEXORA_STATE.md
+
+Après chaque étape importante, mettre à jour ce fichier.
+
+---
+
+# 42. RÈGLE DE CONTINUITÉ
+
+`NEXORA_STATE.md` est la référence principale permettant de reprendre le développement de Nexora.
+
+Toute modification architecturale importante doit être documentée ici.
+
+Le fichier doit toujours permettre de répondre rapidement à :
 
 ```text
-On reprend Nexora.
-Lis NEXORA_STATE.md.
-Ne recommence aucune étape déjà marquée comme terminée.
-Continue exactement à partir de la prochaine étape.
+Où en est Nexora ?
+Qu'est-ce qui fonctionne ?
+Qu'est-ce qui est en construction ?
+Quelle est l'architecture cible ?
+Quelle est la prochaine étape ?
+Quels fichiers ont été modifiés ?
+Quel est le dernier checkpoint Git ?
 ```
 
 ---
 
-# 24. DERNIÈRE INSTRUCTION
+# 43. PHILOSOPHIE FINALE DE NEXORA
 
-**Ne jamais considérer une étape comme terminée uniquement parce que le code existe.**
-
-Une étape est terminée lorsque :
+Nexora ne doit pas être conçu comme :
 
 ```text
-CODE
-  ↓
-BUILD
-  ↓
-TEST
-  ↓
-VALIDATION
-  ↓
-GIT COMMIT
-  ↓
-GIT PUSH
+User
+ ↓
+Prompt
+ ↓
+LLM
+ ↓
+Answer
 ```
 
-est validé.
+mais progressivement comme :
+
+```text
+                    SITUATION
+                        ↓
+                 UNDERSTANDING
+                        ↓
+                    CONTEXT
+                        ↓
+                    REASONING
+                        ↓
+                    DECISION
+                        ↓
+                      GOAL
+                        ↓
+                     PLAN
+                        ↓
+                     ACTION
+                        ↓
+                  OBSERVATION
+                        ↓
+                   EVALUATION
+                        ↓
+                   EXPERIENCE
+                        ↓
+                    EVOLUTION
+                        ↓
+                 LIVING MEMORY
+                        ↓
+                 FUTURE COGNITION
+```
+
+C'est cette boucle qui doit permettre à Nexora de devenir une véritable :
+
+> **Intelligence opérationnelle évolutive.**
+
+---
+
+# 44. ÉTAT DE RÉFÉRENCE
+
+À la reprise du développement, considérer comme référence :
+
+```text
+Repository:
+IseiShoda/nexora
+
+Branch:
+main
+
+Dernier checkpoint Cognitive Core:
+4e35a2d
+
+Architecture cognitive:
+CognitiveInput
+↓
+Understanding
+↓
+Reasoning
+↓
+Decision
+↓
+CognitiveOutput
+
+Architecture long terme:
+Cognitive Core
+↓
+Goal Engine
+↓
+Planning Engine
+↓
+Action Engine
+↓
+Observation
+↓
+Evaluation
+↓
+Experience
+↓
+Evolution
+↺ Cognitive Core
+```
+
+**Prochaine action technique :**
+
+```text
+Intégrer progressivement
+IntentService
+ContextService
+ReasoningService
+BrainDecisionService
+dans CognitiveCoreService
+sans casser le fonctionnement actuel de Brain.
+```
