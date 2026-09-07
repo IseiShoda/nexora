@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+
 import { CognitiveCoreService } from './cognitive-core.service';
 
 @Module({

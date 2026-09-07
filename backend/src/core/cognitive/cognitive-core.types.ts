@@ -1,24 +1,19 @@
 export interface CognitiveInput {
   message: string;
   conversationId?: string;
-
-  context: {
-    activeTopic?: string;
-    entities?: Record<string, unknown>;
-    references?: Record<string, unknown>;
-    recentMessages?: string[];
-  };
+  userId?: string;
+  metadata?: Record<string, unknown>;
 }
 
-export interface CognitiveUnderstanding {
+export interface Understanding {
   intent: string;
   confidence: number;
   subject?: string;
-  entities: Record<string, unknown>;
-  references: Record<string, unknown>;
+  entities: string[];
+  references: string[];
 }
 
-export interface CognitiveReasoning {
+export interface Reasoning {
   facts: string[];
   inferences: string[];
   unknowns: string[];
@@ -26,14 +21,15 @@ export interface CognitiveReasoning {
   dependencies: string[];
 }
 
-export interface CognitiveDecision {
+export interface Decision {
   action: string;
   reason: string;
   confidence: number;
 }
 
 export interface CognitiveOutput {
-  understanding: CognitiveUnderstanding;
-  reasoning: CognitiveReasoning;
-  decision: CognitiveDecision;
+  input: CognitiveInput;
+  understanding: Understanding;
+  reasoning: Reasoning;
+  decision: Decision;
 }
