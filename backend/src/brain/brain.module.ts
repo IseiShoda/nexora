@@ -6,8 +6,9 @@ import { RequirementsModule } from '../requirements/requirements.module';
 import { ReasoningModule } from '../reasoning/reasoning.module';
 
 import { BrainService } from './services/brain.service';
-import { IntentService } from './intents/intent.service';
-import { BrainDecisionService } from './decisions/brain-decision.service';
+
+import { IntentModule } from './intents/intent.module';
+import { BrainDecisionModule } from './decisions/brain-decision.module';
 
 @Module({
   imports: [
@@ -15,14 +16,12 @@ import { BrainDecisionService } from './decisions/brain-decision.service';
     ContextModule,
     RequirementsModule,
     ReasoningModule,
+    IntentModule,
+    BrainDecisionModule,
   ],
-
   providers: [
     BrainService,
-    IntentService,
-    BrainDecisionService,
   ],
-
   exports: [
     BrainService,
   ],
