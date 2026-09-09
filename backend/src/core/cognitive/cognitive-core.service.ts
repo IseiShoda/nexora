@@ -14,11 +14,9 @@ import {
   BrainIntent,
 } from '../../brain/intents/intent.interface';
 
-import { IntentService } from '../../brain/intents/intent.service';
-
 import {
-  BrainDecisionService,
-} from '../../brain/decisions/brain-decision.service';
+  IntentService,
+} from '../../brain/intents/intent.service';
 
 import {
   ContextService,
@@ -44,8 +42,6 @@ export class CognitiveCoreService {
     private readonly contextService: ContextService,
 
     private readonly reasoningService: ReasoningService,
-
-    private readonly decisionService: BrainDecisionService,
   ) {}
 
   async process(
@@ -102,23 +98,28 @@ export class CognitiveCoreService {
         (item) => this.serialize(item),
       ),
 
-      inferences: reasoningResult.inferences.map(
-        (item) => this.serialize(item),
-      ),
+      inferences:
+        reasoningResult.inferences.map(
+          (item) => this.serialize(item),
+        ),
 
-      unknowns: reasoningResult.unknowns.map(
-        (item) => this.serialize(item),
-      ),
+      unknowns:
+        reasoningResult.unknowns.map(
+          (item) => this.serialize(item),
+        ),
 
-      implications: reasoningResult.implications.map(
-        (item) => this.serialize(item),
-      ),
+      implications:
+        reasoningResult.implications.map(
+          (item) => this.serialize(item),
+        ),
 
-      dependencies: reasoningResult.dependencies.map(
-        (item) => this.serialize(item),
-      ),
+      dependencies:
+        reasoningResult.dependencies.map(
+          (item) => this.serialize(item),
+        ),
 
-      questions: reasoningResult.questions,
+      questions:
+        reasoningResult.questions,
     };
 
     /*
@@ -142,13 +143,25 @@ export class CognitiveCoreService {
 
     /*
      * =========================================================
-     * 5. DECISION
+     * 5. COGNITIVE DECISION
      * =========================================================
+     *
+     * IMPORTANT :
+     *
+     * La décision appartient maintenant directement
+     * au Cognitive Core.
+     *
+     * BrainDecisionService n'est plus utilisé ici.
+     *
+     * Le Cognitive Core décide :
+     *
+     * - ANSWER
+     * - CONTINUE_CONTEXT
+     * - ASK_CLARIFICATION
      */
 
     const decision =
       this.buildDecision(
-        detected,
         finalUnderstanding,
         context,
       );
@@ -159,14 +172,12 @@ export class CognitiveCoreService {
      * =========================================================
      *
      * Le Cognitive Core transforme sa décision
-     * abstraite en directive d'exécution explicite.
+     * en directive d'exécution explicite.
      *
-     * IMPORTANT :
-     * Le Cognitive Core est maintenant l'autorité
-     * de la décision et du plan d'exécution.
+     * Le Cognitive Core reste l'autorité.
      *
-     * BrainService reste responsable de l'exécution
-     * physique des handlers existants.
+     * BrainService reste temporairement responsable
+     * de l'exécution physique des handlers existants.
      */
 
     const execution =
@@ -185,7 +196,8 @@ export class CognitiveCoreService {
     const output: CognitiveOutput = {
       input,
 
-      understanding: finalUnderstanding,
+      understanding:
+        finalUnderstanding,
 
       reasoning,
 
@@ -214,16 +226,15 @@ export class CognitiveCoreService {
   }
 
   /*
-   * =========================================================
+   * ===========================================================
    * DECISION
-   * =========================================================
+   * ===========================================================
+   *
+   * Le Cognitive Core possède désormais directement
+   * la logique de décision.
    */
 
   private buildDecision(
-    detected: {
-      intent: BrainIntent;
-      confidence: number;
-    },
     understanding: Understanding,
     context: ConversationContext | null,
   ): Decision {
@@ -256,29 +267,25 @@ export class CognitiveCoreService {
 
     /*
      * ---------------------------------------------------------
-     * CONTEXTE DISPONIBLE
+     * INTENTION CONNUE
      * ---------------------------------------------------------
+     *
+     * Toute intention connue est considérée comme une demande
+     * à laquelle Nexora doit répondre.
      */
 
-    if (context) {
-      const brainDecision =
-        this.decisionService.decide(
-          detected.intent,
-          detected.confidence,
-          context,
-        );
-
+    if (
+      understanding.intent !==
+      BrainIntent.UNKNOWN
+    ) {
       return {
-        action: brainDecision.action,
+        action: 'ANSWER',
 
         reason:
-          this.buildDecisionReason(
-            brainDecision.action,
-            understanding.intent,
-          ),
+          `Intent reconnu : ${understanding.intent}.`,
 
         confidence:
-          brainDecision.confidence,
+          understanding.confidence,
 
         intent:
           understanding.intent,
@@ -287,7 +294,41 @@ export class CognitiveCoreService {
 
     /*
      * ---------------------------------------------------------
-     * AUCUN CONTEXTE
+     * INTENTION INCONNUE MAIS CONTEXTE EXPLOITABLE
+     * ---------------------------------------------------------
+     *
+     * Exemple :
+     *
+     * Contexte :
+     * "Chrono Solar"
+     *
+     * Message :
+     * "Et pour les coûts ?"
+     *
+     * L'intention reste inconnue mais le contexte
+     * permet de poursuivre la conversation.
+     */
+
+    if (
+      context?.relevance?.bestMatch &&
+      context.activeTopic
+    ) {
+      return {
+        action: 'CONTINUE_CONTEXT',
+
+        reason:
+          'Le contexte conversationnel permet de poursuivre.',
+
+        confidence: 1,
+
+        intent:
+          understanding.intent,
+      };
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * AUCUN CONTEXTE EXPLOITABLE
      * ---------------------------------------------------------
      */
 
@@ -295,7 +336,7 @@ export class CognitiveCoreService {
       action: 'ASK_CLARIFICATION',
 
       reason:
-        'Aucun contexte exploitable disponible.',
+        'Les informations disponibles sont insuffisantes.',
 
       confidence: 0,
 
@@ -305,9 +346,9 @@ export class CognitiveCoreService {
   }
 
   /*
-   * =========================================================
+   * ===========================================================
    * EXECUTION PLAN
-   * =========================================================
+   * ===========================================================
    */
 
   private buildExecutionPlan(
@@ -323,20 +364,21 @@ export class CognitiveCoreService {
       );
 
     return {
-      action: decision.action,
+      action:
+        decision.action,
 
       strategy,
 
       /*
-       * Cognitive Authority :
-       *
-       * Le Cognitive Core est maintenant l'autorité
+       * Le Cognitive Core est l'autorité
        * qui produit la décision et le plan d'exécution.
        *
        * Le BrainService reste temporairement responsable
        * de l'exécution physique des handlers.
        */
-      authority: 'COGNITIVE_CORE',
+
+      authority:
+        'COGNITIVE_CORE',
 
       intent:
         understanding.intent,
@@ -396,9 +438,9 @@ export class CognitiveCoreService {
   }
 
   /*
-   * =========================================================
+   * ===========================================================
    * UNDERSTANDING ARBITRATION
-   * =========================================================
+   * ===========================================================
    */
 
   private resolveUnderstanding(
@@ -440,7 +482,8 @@ export class CognitiveCoreService {
 
         entities:
           context?.entities.map(
-            (entity) => entity.value,
+            (entity) =>
+              entity.value,
           ) ?? [],
 
         references:
@@ -477,7 +520,8 @@ export class CognitiveCoreService {
 
         entities:
           context?.entities.map(
-            (entity) => entity.value,
+            (entity) =>
+              entity.value,
           ) ?? [],
 
         references:
@@ -510,7 +554,8 @@ export class CognitiveCoreService {
 
       entities:
         context?.entities.map(
-          (entity) => entity.value,
+          (entity) =>
+            entity.value,
         ) ?? [],
 
       references:
@@ -525,9 +570,9 @@ export class CognitiveCoreService {
   }
 
   /*
-   * =========================================================
+   * ===========================================================
    * SERIALIZATION
-   * =========================================================
+   * ===========================================================
    */
 
   private serialize(
@@ -578,30 +623,5 @@ export class CognitiveCoreService {
     }
 
     return JSON.stringify(item);
-  }
-
-  /*
-   * =========================================================
-   * DECISION REASON
-   * =========================================================
-   */
-
-  private buildDecisionReason(
-    action: string,
-    intent: string,
-  ): string {
-    switch (action) {
-      case 'ANSWER':
-        return `Intent reconnu : ${intent}.`;
-
-      case 'CONTINUE_CONTEXT':
-        return 'Le contexte conversationnel permet de poursuivre.';
-
-      case 'ASK_CLARIFICATION':
-        return 'Les informations disponibles sont insuffisantes.';
-
-      default:
-        return `Décision produite pour l'intention : ${intent}.`;
-    }
   }
 }
