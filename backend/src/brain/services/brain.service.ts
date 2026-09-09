@@ -10,12 +10,10 @@ import { ReasoningService } from '../../reasoning/services/reasoning.service';
 import { ReasoningResult } from '../../reasoning/interfaces/reasoning.interface';
 
 import { CognitiveCoreService } from '../../core/cognitive/cognitive-core.service';
+import { ExecutionPlan } from '../../core/cognitive/cognitive-core.types';
 
 import { IntentService } from '../intents/intent.service';
 import { BrainIntent } from '../intents/intent.interface';
-
-import { BrainAction } from '../decisions/brain-decision.interface';
-import { BrainDecisionService } from '../decisions/brain-decision.service';
 
 @Injectable()
 export class BrainService {
@@ -23,7 +21,6 @@ export class BrainService {
     private readonly intentService: IntentService,
     private readonly memoryService: MemoryService,
     private readonly contextService: ContextService,
-    private readonly decisionService: BrainDecisionService,
     private readonly requirementService: RequirementService,
     private readonly reasoningService: ReasoningService,
     private readonly cognitiveCoreService: CognitiveCoreService,
@@ -33,20 +30,23 @@ export class BrainService {
     message: string,
     conversationId: number,
   ): Promise<string> {
-
     /*
      * =========================================================
-     * 0. COGNITIVE CORE — SHADOW MODE
+     * 0. COGNITIVE CORE
      * =========================================================
      *
-     * Le Cognitive Core entre maintenant dans le flux réel
-     * du Brain.
+     * Le Cognitive Core devient maintenant la source
+     * de la décision d'exécution.
      *
-     * Pour cette étape, il n'est pas encore responsable
-     * de la réponse finale.
+     * BrainService reste une façade d'exécution :
      *
-     * Le pipeline historique continue donc à fonctionner
-     * normalement après cette analyse.
+     * Cognitive Core
+     *      ↓
+     * ExecutionPlan
+     *      ↓
+     * BrainService
+     *      ↓
+     * Legacy handlers
      */
 
     const cognitiveOutput =
@@ -55,24 +55,26 @@ export class BrainService {
         conversationId: String(conversationId),
       });
 
+    const execution =
+      cognitiveOutput.execution;
+
     console.log(
       '[BRAIN] Cognitive Core:',
       cognitiveOutput,
     );
 
-    /*
-     * =========================================================
-     * 1. INTENT
-     * =========================================================
-     */
-
-    const detected =
-      this.intentService.detect(message);
+    console.log(
+      '[BRAIN] Execution Plan:',
+      execution,
+    );
 
     /*
      * =========================================================
-     * 2. CONTEXT
+     * 1. CONTEXT
      * =========================================================
+     *
+     * Le contexte reste nécessaire pour les handlers
+     * historiques.
      */
 
     const context =
@@ -82,8 +84,13 @@ export class BrainService {
 
     /*
      * =========================================================
-     * 3. REASONING
+     * 2. REASONING
      * =========================================================
+     *
+     * Temporairement conservé pour alimenter les handlers
+     * historiques, notamment les exigences.
+     *
+     * Le Cognitive Core reste responsable de la décision.
      */
 
     const reasoning =
@@ -93,67 +100,197 @@ export class BrainService {
         context,
       );
 
-    /*
-     * =========================================================
-     * 4. DECISION
-     * =========================================================
-     */
-
-    const decision =
-      this.decisionService.decide(
-        detected.intent,
-        detected.confidence,
-        context,
-      );
-
-    console.log(
-      '[BRAIN] Intent:',
-      detected,
-    );
-
     console.log(
       '[REASONING] Result:',
       reasoning,
     );
 
+    /*
+     * =========================================================
+     * 3. EXECUTION
+     * =========================================================
+     *
+     * Le BrainService n'effectue plus une nouvelle décision.
+     *
+     * Il consomme directement le plan produit par
+     * le Cognitive Core.
+     */
+
+    return this.executeCognitivePlan(
+      execution,
+      message,
+      context,
+      reasoning,
+    );
+  }
+
+  /*
+   * =========================================================
+   * COGNITIVE EXECUTION
+   * =========================================================
+   */
+
+  private async executeCognitivePlan(
+    execution: ExecutionPlan,
+    message: string,
+    context: ConversationContext,
+    reasoning: ReasoningResult,
+  ): Promise<string> {
     console.log(
-      '[BRAIN] Decision:',
-      decision,
+      `[BRAIN] Executing strategy: ${execution.strategy}`,
+    );
+
+    console.log(
+      `[BRAIN] Execution authority: ${execution.authority}`,
     );
 
     /*
-     * =========================================================
-     * 5. ACTION
-     * =========================================================
+     * =======================================================
+     * ANSWER
+     * =======================================================
      */
 
-    switch (decision.action) {
-      case BrainAction.ANSWER:
+    if (execution.action === 'ANSWER') {
+      return this.executeAnswer(
+        execution,
+        message,
+        context,
+        reasoning,
+      );
+    }
+
+    /*
+     * =======================================================
+     * CONTINUE CONTEXT
+     * =======================================================
+     */
+
+    if (execution.action === 'CONTINUE_CONTEXT') {
+      return this.handleContextualResponse(
+        message,
+        context,
+      );
+    }
+
+    /*
+     * =======================================================
+     * ASK CLARIFICATION
+     * =======================================================
+     */
+
+    if (execution.action === 'ASK_CLARIFICATION') {
+      return this.handleClarification(
+        message,
+        context,
+      );
+    }
+
+    /*
+     * =======================================================
+     * FALLBACK
+     * =======================================================
+     */
+
+    return this.handleContextualResponse(
+      message,
+      context,
+    );
+  }
+
+  /*
+   * =========================================================
+   * ANSWER EXECUTION
+   * =========================================================
+   */
+
+  private async executeAnswer(
+    execution: ExecutionPlan,
+    message: string,
+    context: ConversationContext,
+    reasoning: ReasoningResult,
+  ): Promise<string> {
+    switch (execution.strategy) {
+      /*
+       * -------------------------------------------------------
+       * QUESTION
+       * -------------------------------------------------------
+       *
+       * Le Cognitive Core sait qu'il s'agit d'une question.
+       *
+       * Nous n'avons pas encore de Response Engine dédié.
+       *
+       * Pour cette étape, nous conservons donc un comportement
+       * déterministe et non destructif.
+       */
+
+      case 'ANSWER_QUESTION':
+        console.log(
+          '[BRAIN] Execution: ANSWER_QUESTION',
+        );
+
+        return this.handleQuestion(
+          message,
+          context,
+        );
+
+      /*
+       * -------------------------------------------------------
+       * INTENT
+       * -------------------------------------------------------
+       */
+
+      case 'ANSWER_INTENT':
+        console.log(
+          '[BRAIN] Execution: ANSWER_INTENT',
+        );
+
         return this.handleIntent(
-          detected.intent,
+          execution.intent as BrainIntent,
           message,
           context,
           reasoning,
         );
 
-      case BrainAction.CONTINUE_CONTEXT:
-        return this.handleContextualResponse(
-          message,
-          context,
-        );
-
-      case BrainAction.ASK_CLARIFICATION:
-        return this.handleClarification(
-          message,
-          context,
-        );
+      /*
+       * -------------------------------------------------------
+       * FALLBACK
+       * -------------------------------------------------------
+       */
 
       default:
-        return this.handleContextualResponse(
+        return this.handleIntent(
+          execution.intent as BrainIntent,
           message,
           context,
+          reasoning,
         );
     }
+  }
+
+  /*
+   * =========================================================
+   * QUESTION
+   * =========================================================
+   */
+
+  private handleQuestion(
+    message: string,
+    context: ConversationContext,
+  ): string {
+    /*
+     * Le Cognitive Core a correctement identifié la question.
+     *
+     * Le moteur de réponse intelligent viendra plus tard.
+     *
+     * Pour cette étape, nous conservons un comportement
+     * déterministe et non destructif.
+     */
+
+    if (context.activeTopic) {
+      return `Ta question concerne "${context.activeTopic}" : "${message}".`;
+    }
+
+    return `J'ai identifié ta question : "${message}".`;
   }
 
   /*
@@ -190,6 +327,12 @@ export class BrainService {
 
       case BrainIntent.PROJECT_REQUIREMENTS_QUERY:
         return this.handleProjectRequirementsQuery(
+          context,
+        );
+
+      case BrainIntent.QUESTION:
+        return this.handleQuestion(
+          message,
           context,
         );
 
@@ -345,7 +488,7 @@ export class BrainService {
 
     if (reasoning.inferences.length > 0) {
       response.push('');
-      response.push('Ce que j\'en déduis :');
+      response.push("Ce que j'en déduis :");
 
       for (const inference of reasoning.inferences) {
         response.push(
@@ -362,7 +505,9 @@ export class BrainService {
 
     if (reasoning.implications.length > 0) {
       response.push('');
-      response.push('Implications identifiées :');
+      response.push(
+        'Implications identifiées :',
+      );
 
       for (const implication of reasoning.implications) {
         response.push(
@@ -379,7 +524,9 @@ export class BrainService {
 
     if (reasoning.unknowns.length > 0) {
       response.push('');
-      response.push('Point encore à préciser :');
+      response.push(
+        'Point encore à préciser :',
+      );
 
       for (const unknown of reasoning.unknowns) {
         response.push(
@@ -469,17 +616,6 @@ export class BrainService {
     /*
      * Supprime les pronoms / connecteurs utilisés
      * lorsqu'une exigence fait référence au projet.
-     *
-     * Exemples :
-     *
-     * "Il devra supporter 100 000 utilisateurs"
-     * -> "devra supporter 100 000 utilisateurs"
-     *
-     * "Et il devra rester rapide"
-     * -> "devra rester rapide"
-     *
-     * "Elle doit être sécurisée"
-     * -> "doit être sécurisée"
      */
 
     requirement = requirement.replace(
