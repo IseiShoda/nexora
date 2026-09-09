@@ -6,6 +6,8 @@ import {
   Understanding,
   Reasoning,
   Decision,
+  ExecutionPlan,
+  CognitiveExecutionStrategy,
 } from './cognitive-core.types';
 
 import {
@@ -13,9 +15,22 @@ import {
 } from '../../brain/intents/intent.interface';
 
 import { IntentService } from '../../brain/intents/intent.service';
-import { BrainDecisionService } from '../../brain/decisions/brain-decision.service';
-import { ContextService } from '../../context/services/context.service';
-import { ReasoningService } from '../../reasoning/services/reasoning.service';
+
+import {
+  BrainDecisionService,
+} from '../../brain/decisions/brain-decision.service';
+
+import {
+  ContextService,
+} from '../../context/services/context.service';
+
+import {
+  ConversationContext,
+} from '../../context/interfaces/context.interface';
+
+import {
+  ReasoningService,
+} from '../../reasoning/services/reasoning.service';
 
 @Injectable()
 export class CognitiveCoreService {
@@ -25,8 +40,11 @@ export class CognitiveCoreService {
 
   constructor(
     private readonly intentService: IntentService,
+
     private readonly contextService: ContextService,
+
     private readonly reasoningService: ReasoningService,
+
     private readonly decisionService: BrainDecisionService,
   ) {}
 
@@ -126,67 +144,53 @@ export class CognitiveCoreService {
      * =========================================================
      * 5. DECISION
      * =========================================================
-     *
-     * Pour les intentions connues, on conserve
-     * BrainDecisionService.
-     *
-     * Pour une question détectée par le raisonnement,
-     * le Cognitive Core produit directement une décision
-     * cohérente avec cette compréhension.
      */
 
-    let decision: Decision;
-
-    if (
-      finalUnderstanding.intent ===
-      BrainIntent.QUESTION
-    ) {
-      decision = {
-        action: 'ANSWER',
-        reason:
-          'Le raisonnement a identifié une question explicite.',
-        confidence:
-          finalUnderstanding.confidence,
-        intent: BrainIntent.QUESTION,
-      };
-    } else if (context) {
-      const brainDecision =
-        this.decisionService.decide(
-          detected.intent,
-          detected.confidence,
-          context,
-        );
-
-      decision = {
-        action: brainDecision.action,
-        reason: this.buildDecisionReason(
-          brainDecision.action,
-          finalUnderstanding.intent,
-        ),
-        confidence: brainDecision.confidence,
-        intent: finalUnderstanding.intent,
-      };
-    } else {
-      decision = {
-        action: 'ASK_CLARIFICATION',
-        reason:
-          'Aucun contexte exploitable disponible.',
-        confidence: 0,
-        intent: finalUnderstanding.intent,
-      };
-    }
+    const decision =
+      this.buildDecision(
+        detected,
+        finalUnderstanding,
+        context,
+      );
 
     /*
      * =========================================================
-     * 6. FINAL OUTPUT
+     * 6. EXECUTION PLAN
+     * =========================================================
+     *
+     * Le Cognitive Core transforme maintenant sa décision
+     * abstraite en directive d'exécution explicite.
+     *
+     * IMPORTANT :
+     * authority reste LEGACY_BRAIN.
+     *
+     * Le Cognitive Core décide.
+     * Le Brain historique exécute encore.
+     */
+
+    const execution =
+      this.buildExecutionPlan(
+        decision,
+        finalUnderstanding,
+        reasoning,
+      );
+
+    /*
+     * =========================================================
+     * 7. FINAL OUTPUT
      * =========================================================
      */
 
     const output: CognitiveOutput = {
       input,
+
       understanding: finalUnderstanding,
+
       reasoning,
+
       decision,
+
+      execution,
     };
 
     this.logger.log(
@@ -197,13 +201,201 @@ export class CognitiveCoreService {
       `[COGNITIVE] Decision: ${decision.action}`,
     );
 
+    this.logger.log(
+      `[COGNITIVE] Execution: ${execution.strategy}`,
+    );
+
+    this.logger.log(
+      `[COGNITIVE] Authority: ${execution.authority}`,
+    );
+
     return output;
   }
 
   /*
-   * ===========================================================
+   * =========================================================
+   * DECISION
+   * =========================================================
+   */
+
+  private buildDecision(
+    detected: {
+      intent: BrainIntent;
+      confidence: number;
+    },
+    understanding: Understanding,
+    context: ConversationContext | null,
+  ): Decision {
+    /*
+     * ---------------------------------------------------------
+     * QUESTION
+     * ---------------------------------------------------------
+     *
+     * Une question explicitement détectée par le raisonnement
+     * devient une décision cognitive directe.
+     */
+
+    if (
+      understanding.intent ===
+      BrainIntent.QUESTION
+    ) {
+      return {
+        action: 'ANSWER',
+
+        reason:
+          'Le raisonnement a identifié une question explicite.',
+
+        confidence:
+          understanding.confidence,
+
+        intent:
+          BrainIntent.QUESTION,
+      };
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * CONTEXTE DISPONIBLE
+     * ---------------------------------------------------------
+     */
+
+    if (context) {
+      const brainDecision =
+        this.decisionService.decide(
+          detected.intent,
+          detected.confidence,
+          context,
+        );
+
+      return {
+        action: brainDecision.action,
+
+        reason:
+          this.buildDecisionReason(
+            brainDecision.action,
+            understanding.intent,
+          ),
+
+        confidence:
+          brainDecision.confidence,
+
+        intent:
+          understanding.intent,
+      };
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * AUCUN CONTEXTE
+     * ---------------------------------------------------------
+     */
+
+    return {
+      action: 'ASK_CLARIFICATION',
+
+      reason:
+        'Aucun contexte exploitable disponible.',
+
+      confidence: 0,
+
+      intent:
+        understanding.intent,
+    };
+  }
+
+  /*
+   * =========================================================
+   * EXECUTION PLAN
+   * =========================================================
+   */
+
+  private buildExecutionPlan(
+    decision: Decision,
+    understanding: Understanding,
+    reasoning: Reasoning,
+  ): ExecutionPlan {
+    const strategy =
+      this.resolveExecutionStrategy(
+        decision,
+        understanding,
+        reasoning,
+      );
+
+    return {
+      action: decision.action,
+
+      strategy,
+
+      /*
+       * Shadow Mode :
+       *
+       * Le Cognitive Core prend déjà la décision,
+       * mais le Brain historique reste responsable
+       * de l'exécution réelle.
+       */
+      authority: 'LEGACY_BRAIN',
+
+      intent:
+        understanding.intent,
+
+      confidence:
+        decision.confidence,
+
+      reason:
+        decision.reason,
+    };
+  }
+
+  private resolveExecutionStrategy(
+    decision: Decision,
+    understanding: Understanding,
+    reasoning: Reasoning,
+  ): CognitiveExecutionStrategy {
+    /*
+     * QUESTION
+     */
+
+    if (
+      understanding.intent ===
+        BrainIntent.QUESTION &&
+      reasoning.questions.length > 0
+    ) {
+      return 'ANSWER_QUESTION';
+    }
+
+    /*
+     * CLARIFICATION
+     */
+
+    if (
+      decision.action ===
+      'ASK_CLARIFICATION'
+    ) {
+      return 'ASK_CLARIFICATION';
+    }
+
+    /*
+     * CONTEXTE
+     */
+
+    if (
+      decision.action ===
+      'CONTINUE_CONTEXT'
+    ) {
+      return 'CONTINUE_CONTEXT';
+    }
+
+    /*
+     * INTENTION RECONNUE
+     */
+
+    return 'ANSWER_INTENT';
+  }
+
+  /*
+   * =========================================================
    * UNDERSTANDING ARBITRATION
-   * ===========================================================
+   * =========================================================
    */
 
   private resolveUnderstanding(
@@ -211,14 +403,15 @@ export class CognitiveCoreService {
       intent: BrainIntent;
       confidence: number;
     },
+
     reasoning: Reasoning,
-    context: any,
+
+    context: ConversationContext | null,
   ): Understanding {
     /*
-     * Le raisonnement a explicitement identifié
-     * une ou plusieurs questions.
-     *
-     * Il est donc prioritaire sur UNKNOWN.
+     * ---------------------------------------------------------
+     * QUESTION PRIORITAIRE
+     * ---------------------------------------------------------
      */
 
     if (
@@ -229,90 +422,117 @@ export class CognitiveCoreService {
       );
 
       return {
-        intent: BrainIntent.QUESTION,
-        confidence: Math.max(
-          detected.confidence,
-          0.95,
-        ),
+        intent:
+          BrainIntent.QUESTION,
+
+        confidence:
+          Math.max(
+            detected.confidence,
+            0.95,
+          ),
+
         subject:
           context?.activeTopic ??
           undefined,
+
         entities:
-          context?.entities?.map(
-            (entity: any) => entity.value,
+          context?.entities.map(
+            (entity) => entity.value,
           ) ?? [],
+
         references:
-          context?.references?.map(
-            (reference: any) =>
-              typeof reference === 'string'
-                ? reference
-                : reference.value ??
-                  JSON.stringify(reference),
+          context?.references.map(
+            (reference) =>
+              reference.value,
           ) ?? [],
-        source: 'REASONING',
+
+        source:
+          'REASONING',
       };
     }
 
     /*
-     * Si IntentService a identifié une intention
-     * connue, nous la conservons.
+     * ---------------------------------------------------------
+     * INTENTION CONNUE
+     * ---------------------------------------------------------
      */
 
     if (
-      detected.intent !== BrainIntent.UNKNOWN
+      detected.intent !==
+      BrainIntent.UNKNOWN
     ) {
       return {
-        intent: detected.intent,
-        confidence: detected.confidence,
+        intent:
+          detected.intent,
+
+        confidence:
+          detected.confidence,
+
         subject:
           context?.activeTopic ??
           undefined,
+
         entities:
-          context?.entities?.map(
-            (entity: any) => entity.value,
+          context?.entities.map(
+            (entity) => entity.value,
           ) ?? [],
+
         references:
-          context?.references?.map(
-            (reference: any) =>
-              typeof reference === 'string'
-                ? reference
-                : reference.value ??
-                  JSON.stringify(reference),
+          context?.references.map(
+            (reference) =>
+              reference.value,
           ) ?? [],
-        source: 'INTENT',
+
+        source:
+          'INTENT',
       };
     }
 
     /*
-     * Aucun signal suffisamment fort.
+     * ---------------------------------------------------------
+     * UNKNOWN
+     * ---------------------------------------------------------
      */
 
     return {
-      intent: BrainIntent.UNKNOWN,
-      confidence: detected.confidence,
+      intent:
+        BrainIntent.UNKNOWN,
+
+      confidence:
+        detected.confidence,
+
       subject:
         context?.activeTopic ??
         undefined,
+
       entities:
-        context?.entities?.map(
-          (entity: any) => entity.value,
+        context?.entities.map(
+          (entity) => entity.value,
         ) ?? [],
+
       references:
-        context?.references?.map(
-          (reference: any) =>
-            typeof reference === 'string'
-              ? reference
-              : reference.value ??
-                JSON.stringify(reference),
+        context?.references.map(
+          (reference) =>
+            reference.value,
         ) ?? [],
-      source: 'COGNITIVE',
+
+      source:
+        'COGNITIVE',
     };
   }
+
+  /*
+   * =========================================================
+   * SERIALIZATION
+   * =========================================================
+   */
 
   private serialize(
     item: unknown,
   ): string {
-    if (typeof item === 'string') {
+    if (
+      typeof item === 'string'
+    ) {
       return item;
     }
 
@@ -327,22 +547,28 @@ export class CognitiveCoreService {
       typeof item === 'object'
     ) {
       const record =
-        item as Record<string, unknown>;
+        item as Record<
+          string,
+          unknown
+        >;
 
       if (
-        typeof record.content === 'string'
+        typeof record.content ===
+        'string'
       ) {
         return record.content;
       }
 
       if (
-        typeof record.description === 'string'
+        typeof record.description ===
+        'string'
       ) {
         return record.description;
       }
 
       if (
-        typeof record.value === 'string'
+        typeof record.value ===
+        'string'
       ) {
         return record.value;
       }
@@ -350,6 +576,12 @@ export class CognitiveCoreService {
 
     return JSON.stringify(item);
   }
+
+  /*
+   * =========================================================
+   * DECISION REASON
+   * =========================================================
+   */
 
   private buildDecisionReason(
     action: string,
