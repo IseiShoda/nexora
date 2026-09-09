@@ -53,46 +53,300 @@ export class ReasoningService {
       );
     }
 
-    /*
-     * =========================================================
-     * QUESTION PROTECTION
-     *
-     * Une question ne doit jamais être analysée comme une
-     * nouvelle exigence.
-     *
-     * Exemple :
-     *
-     * "Pourquoi Chrono Solar doit-il supporter
-     * 100 000 utilisateurs tout en restant rapide ?"
-     *
-     * Cette phrase contient "doit", "supporter" et
-     * "utilisateurs", mais elle reste une question.
-     * =========================================================
-     */
-    if (
-      normalized.endsWith('?') ||
-      /^(pourquoi|comment|quand|ou|quel|quelle|quels|quelles|est-ce que|dois-je|doit-il|doit-elle)/i.test(
-        normalized,
-      )
-    ) {
-      return {
-        subject,
-        type: ReasoningType.UNKNOWN,
-        facts: [],
-        inferences: [],
-        unknowns: [],
-        implications: [],
-        dependencies: [],
-        questions: [message.trim()],
-      };
-    }
-
     const facts: ReasoningFact[] = [];
     const inferences: ReasoningInference[] = [];
     const unknowns: ReasoningUnknown[] = [];
     const implications: ReasoningImplication[] = [];
     const dependencies: ReasoningDependency[] = [];
     const questions: string[] = [];
+
+    /*
+     * =========================================================
+     * QUESTION DETECTION
+     * =========================================================
+     */
+
+    const isQuestion =
+      normalized.endsWith('?') ||
+      /^(pourquoi|comment|quand|ou|quel|quelle|quels|quelles|est-ce que|dois-je|doit-il|doit-elle)/i.test(
+        normalized,
+      );
+
+    /*
+     * =========================================================
+     * QUESTION REASONING
+     *
+     * Une question explicite reste une QUESTION.
+     *
+     * Nous ne la transformons jamais directement en
+     * REQUIREMENT même si elle contient des termes comme
+     * "doit", "supporter", "utilisateurs", etc.
+     * =========================================================
+     */
+
+    if (isQuestion) {
+      questions.push(message.trim());
+
+      /*
+       * -------------------------------------------------------
+       * CONTEXT FACT
+       * -------------------------------------------------------
+       */
+
+      if (context?.activeTopic) {
+        facts.push({
+          content:
+            `Le projet concerné est ${context.activeTopic}.`,
+          source: 'CONTEXT',
+        });
+      }
+
+      /*
+       * -------------------------------------------------------
+       * SUBJECT FACT
+       * -------------------------------------------------------
+       */
+
+      if (
+        subject &&
+        context?.activeTopic !== subject
+      ) {
+        facts.push({
+          content:
+            `Le sujet concerné est ${subject}.`,
+          source: 'CONTEXT',
+        });
+      }
+
+      /*
+       * -------------------------------------------------------
+       * LOAD TARGET
+       * -------------------------------------------------------
+       */
+
+      const loadTargetMatch =
+        normalized.match(
+          /(\d[\d\s.,]*)\s*(utilisateurs?|users?)/i,
+        );
+
+      if (loadTargetMatch) {
+        const loadTarget =
+          this.normalizeLoadTarget(
+            loadTargetMatch[1],
+          );
+
+        facts.push({
+          content:
+            `La charge cible mentionnée est de ${loadTarget} utilisateurs.`,
+          source: 'USER',
+        });
+
+        inferences.push({
+          content:
+            `Le système doit être capable de gérer une charge pouvant atteindre ${loadTarget} utilisateurs.`,
+          basedOn: [
+            message.trim(),
+          ],
+        });
+
+        implications.push({
+          content:
+            'L architecture doit être conçue pour supporter une montée en charge importante.',
+          basedOn: [
+            message.trim(),
+          ],
+        });
+
+        this.addDependency(
+          dependencies,
+          'Architecture',
+          'TECHNICAL',
+        );
+
+        this.addDependency(
+          dependencies,
+          'Infrastructure',
+          'TECHNICAL',
+        );
+
+        this.addDependency(
+          dependencies,
+          'Base de données',
+          'TECHNICAL',
+        );
+
+        this.addDependency(
+          dependencies,
+          'Capacity Planning',
+          'TECHNICAL',
+        );
+
+        /*
+         * -----------------------------------------------------
+         * UNKNOWN LOAD PROFILE
+         * -----------------------------------------------------
+         */
+
+        unknowns.push({
+          content:
+            'Nombre d utilisateurs simultanés',
+          reason:
+            'Le nombre total d utilisateurs ne permet pas de déterminer combien d utilisateurs seront actifs simultanément.',
+        });
+
+        unknowns.push({
+          content:
+            'Profil de charge',
+          reason:
+            'La répartition et les variations de charge ne sont pas encore définies.',
+        });
+      }
+
+      /*
+       * -------------------------------------------------------
+       * PERFORMANCE
+       * -------------------------------------------------------
+       */
+
+      const mentionsPerformance =
+        /\brapide\b/.test(normalized) ||
+        /\brapides\b/.test(normalized) ||
+        /\bperformance\b/.test(normalized) ||
+        /\bperformant\b/.test(normalized) ||
+        /\bperformante\b/.test(normalized) ||
+        /\blatence\b/.test(normalized) ||
+        /\btemps de reponse\b/.test(normalized);
+
+      if (mentionsPerformance) {
+        facts.push({
+          content:
+            'La performance et la rapidité du système sont des éléments importants de la question.',
+          source: 'USER',
+        });
+
+        inferences.push({
+          content:
+            'Le système devra maintenir des performances acceptables même lorsque la charge augmente.',
+          basedOn: [
+            message.trim(),
+          ],
+        });
+
+        implications.push({
+          content:
+            'La conception devra prendre en compte la performance, la latence et la montée en charge.',
+          basedOn: [
+            message.trim(),
+          ],
+        });
+
+        this.addDependency(
+          dependencies,
+          'Performance',
+          'TECHNICAL',
+        );
+      }
+
+      /*
+       * -------------------------------------------------------
+       * PERFORMANCE UNKNOWN
+       * -------------------------------------------------------
+       */
+
+      if (mentionsPerformance) {
+        unknowns.push({
+          content:
+            'Temps de réponse cible',
+          reason:
+            'La notion de rapidité est mentionnée mais aucun objectif mesurable de temps de réponse n est défini.',
+        });
+      }
+
+      /*
+       * -------------------------------------------------------
+       * QUESTION TYPE: WHY
+       * -------------------------------------------------------
+       */
+
+      if (
+        normalized.startsWith(
+          'pourquoi',
+        )
+      ) {
+        inferences.push({
+          content:
+            'La question cherche à comprendre la justification d une contrainte ou d un objectif du projet.',
+          basedOn: [
+            message.trim(),
+          ],
+        });
+
+        implications.push({
+          content:
+            'Pour répondre correctement, Nexora doit relier la contrainte exprimée aux objectifs, besoins et conséquences techniques du projet.',
+          basedOn: [
+            message.trim(),
+          ],
+        });
+      }
+
+      /*
+       * -------------------------------------------------------
+       * QUESTION TYPE: HOW
+       * -------------------------------------------------------
+       */
+
+      if (
+        normalized.startsWith(
+          'comment',
+        )
+      ) {
+        inferences.push({
+          content:
+            'La question cherche à déterminer une méthode, une stratégie ou un mécanisme permettant d atteindre un objectif.',
+          basedOn: [
+            message.trim(),
+          ],
+        });
+      }
+
+      /*
+       * -------------------------------------------------------
+       * QUESTION TYPE: WHEN
+       * -------------------------------------------------------
+       */
+
+      if (
+        normalized.startsWith(
+          'quand',
+        )
+      ) {
+        inferences.push({
+          content:
+            'La question cherche à déterminer un moment, une échéance ou une condition temporelle.',
+          basedOn: [
+            message.trim(),
+          ],
+        });
+      }
+
+      /*
+       * -------------------------------------------------------
+       * QUESTION RESULT
+       * -------------------------------------------------------
+       */
+
+      return {
+        subject,
+        type: ReasoningType.QUESTION,
+        facts,
+        inferences,
+        unknowns,
+        implications,
+        dependencies,
+        questions,
+      };
+    }
 
     /*
      * =========================================================
@@ -103,11 +357,12 @@ export class ReasoningService {
     const previousContext =
       context?.messages ?? [];
 
-    const previousText = previousContext
-      .map((item) =>
-        this.normalize(item.content),
-      )
-      .join(' ');
+    const previousText =
+      previousContext
+        .map((item) =>
+          this.normalize(item.content),
+        )
+        .join(' ');
 
     const previousAskedForLoadTarget =
       previousText.includes(
@@ -201,7 +456,9 @@ export class ReasoningService {
         inferences.push({
           content:
             'Une architecture capable d absorber une augmentation de charge sera nécessaire.',
-          basedOn: [message.trim()],
+          basedOn: [
+            message.trim(),
+          ],
         });
 
         /*
@@ -213,7 +470,9 @@ export class ReasoningService {
         implications.push({
           content:
             'L architecture devra pouvoir supporter une augmentation de charge.',
-          basedOn: [message.trim()],
+          basedOn: [
+            message.trim(),
+          ],
         });
 
         /*
@@ -252,19 +511,11 @@ export class ReasoningService {
               loadTargetMatch[1],
             );
 
-          /*
-           * FACT
-           */
-
           facts.push({
             content:
               `La charge cible est de ${loadTarget} utilisateurs.`,
             source: 'USER',
           });
-
-          /*
-           * INFERENCE
-           */
 
           inferences.push({
             content:
@@ -274,10 +525,6 @@ export class ReasoningService {
             ],
           });
 
-          /*
-           * IMPLICATION
-           */
-
           implications.push({
             content:
               `L architecture devra être dimensionnée pour supporter une charge pouvant atteindre ${loadTarget} utilisateurs.`,
@@ -285,10 +532,6 @@ export class ReasoningService {
               message.trim(),
             ],
           });
-
-          /*
-           * DEPENDENCY
-           */
 
           this.addDependency(
             dependencies,
@@ -298,10 +541,6 @@ export class ReasoningService {
         } else if (
           !previousAskedForLoadTarget
         ) {
-          /*
-           * UNKNOWN
-           */
-
           unknowns.push({
             content: 'Charge cible',
             reason:
@@ -327,13 +566,17 @@ export class ReasoningService {
         inferences.push({
           content:
             'Le système devra intégrer des mécanismes permettant de protéger les données et les accès.',
-          basedOn: [message.trim()],
+          basedOn: [
+            message.trim(),
+          ],
         });
 
         implications.push({
           content:
             'L architecture devra intégrer des mécanismes de sécurité adaptés.',
-          basedOn: [message.trim()],
+          basedOn: [
+            message.trim(),
+          ],
         });
 
         this.addDependency(
@@ -360,13 +603,17 @@ export class ReasoningService {
         inferences.push({
           content:
             'Le système devra être conçu pour maintenir un temps de réponse faible.',
-          basedOn: [message.trim()],
+          basedOn: [
+            message.trim(),
+          ],
         });
 
         implications.push({
           content:
             'Les performances et la latence devront être prises en compte dans l architecture.',
-          basedOn: [message.trim()],
+          basedOn: [
+            message.trim(),
+          ],
         });
 
         this.addDependency(
@@ -462,7 +709,7 @@ export class ReasoningService {
   ): string {
     return text
       .toLowerCase()
-      .replace(/�/g, '')
+      .replace(/ï¿½/g, '')
       .normalize('NFD')
       .replace(
         /[\u0300-\u036f]/g,

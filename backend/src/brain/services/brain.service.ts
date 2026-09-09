@@ -35,10 +35,8 @@ export class BrainService {
      * 0. COGNITIVE CORE
      * =========================================================
      *
-     * Le Cognitive Core devient maintenant la source
-     * de la décision d'exécution.
-     *
-     * BrainService reste une façade d'exécution :
+     * Le Cognitive Core est la source de la décision
+     * d'exécution.
      *
      * Cognitive Core
      *      ↓
@@ -46,7 +44,7 @@ export class BrainService {
      *      ↓
      * BrainService
      *      ↓
-     * Legacy handlers
+     * Execution
      */
 
     const cognitiveOutput =
@@ -72,9 +70,6 @@ export class BrainService {
      * =========================================================
      * 1. CONTEXT
      * =========================================================
-     *
-     * Le contexte reste nécessaire pour les handlers
-     * historiques.
      */
 
     const context =
@@ -87,8 +82,8 @@ export class BrainService {
      * 2. REASONING
      * =========================================================
      *
-     * Temporairement conservé pour alimenter les handlers
-     * historiques, notamment les exigences.
+     * Le Reasoning produit l'analyse structurée utilisée
+     * par les handlers du Brain.
      *
      * Le Cognitive Core reste responsable de la décision.
      */
@@ -109,11 +104,6 @@ export class BrainService {
      * =========================================================
      * 3. EXECUTION
      * =========================================================
-     *
-     * Le BrainService n'effectue plus une nouvelle décision.
-     *
-     * Il consomme directement le plan produit par
-     * le Cognitive Core.
      */
 
     return this.executeCognitivePlan(
@@ -217,10 +207,8 @@ export class BrainService {
        *
        * Le Cognitive Core sait qu'il s'agit d'une question.
        *
-       * Nous n'avons pas encore de Response Engine dédié.
-       *
-       * Pour cette étape, nous conservons donc un comportement
-       * déterministe et non destructif.
+       * Le Brain utilise maintenant le ReasoningResult pour
+       * construire une réponse structurée.
        */
 
       case 'ANSWER_QUESTION':
@@ -231,6 +219,7 @@ export class BrainService {
         return this.handleQuestion(
           message,
           context,
+          reasoning,
         );
 
       /*
@@ -271,26 +260,172 @@ export class BrainService {
    * =========================================================
    * QUESTION
    * =========================================================
+   *
+   * Le Brain ne répond plus simplement :
+   *
+   * "J'ai identifié ta question..."
+   *
+   * Il consomme maintenant les éléments produits par
+   * le moteur de raisonnement :
+   *
+   * - facts
+   * - inferences
+   * - implications
+   * - dependencies
+   * - unknowns
+   * - questions
    */
 
   private handleQuestion(
     message: string,
     context: ConversationContext,
+    reasoning: ReasoningResult,
   ): string {
+    const response: string[] = [];
+
     /*
-     * Le Cognitive Core a correctement identifié la question.
-     *
-     * Le moteur de réponse intelligent viendra plus tard.
-     *
-     * Pour cette étape, nous conservons un comportement
-     * déterministe et non destructif.
+     * ---------------------------------------------------------
+     * CONTEXTE
+     * ---------------------------------------------------------
      */
 
     if (context.activeTopic) {
-      return `Ta question concerne "${context.activeTopic}" : "${message}".`;
+      response.push(
+        `Ta question concerne "${context.activeTopic}".`,
+      );
+    } else {
+      response.push(
+        "J'ai analysé ta question.",
+      );
     }
 
-    return `J'ai identifié ta question : "${message}".`;
+    /*
+     * ---------------------------------------------------------
+     * FACTS
+     * ---------------------------------------------------------
+     */
+
+    if (reasoning.facts.length > 0) {
+      response.push('');
+      response.push('Ce que je sais :');
+
+      for (const fact of reasoning.facts) {
+        response.push(
+          `• ${fact.content}`,
+        );
+      }
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * INFERENCES
+     * ---------------------------------------------------------
+     */
+
+    if (reasoning.inferences.length > 0) {
+      response.push('');
+      response.push("Ce que j'en déduis :");
+
+      for (const inference of reasoning.inferences) {
+        response.push(
+          `• ${inference.content}`,
+        );
+      }
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * IMPLICATIONS
+     * ---------------------------------------------------------
+     */
+
+    if (reasoning.implications.length > 0) {
+      response.push('');
+      response.push(
+        'Implications identifiées :',
+      );
+
+      for (const implication of reasoning.implications) {
+        response.push(
+          `• ${implication.content}`,
+        );
+      }
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * DEPENDENCIES
+     * ---------------------------------------------------------
+     */
+
+    if (reasoning.dependencies.length > 0) {
+      response.push('');
+      response.push(
+        'Domaines concernés :',
+      );
+
+      for (const dependency of reasoning.dependencies) {
+        response.push(
+          `• ${dependency.content}`,
+        );
+      }
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * UNKNOWNS
+     * ---------------------------------------------------------
+     */
+
+    if (reasoning.unknowns.length > 0) {
+      response.push('');
+      response.push(
+        'Points encore inconnus :',
+      );
+
+      for (const unknown of reasoning.unknowns) {
+        response.push(
+          `• ${unknown.content} — ${unknown.reason}`,
+        );
+      }
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * QUESTION ANALYSÉE
+     * ---------------------------------------------------------
+     */
+
+    if (reasoning.questions.length > 0) {
+      response.push('');
+      response.push(
+        `Question analysée : "${reasoning.questions[0]}"`,
+      );
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * FALLBACK
+     * ---------------------------------------------------------
+     *
+     * Si le raisonnement ne contient aucun élément exploitable,
+     * on conserve le comportement précédent.
+     */
+
+    if (
+      reasoning.facts.length === 0 &&
+      reasoning.inferences.length === 0 &&
+      reasoning.implications.length === 0 &&
+      reasoning.dependencies.length === 0 &&
+      reasoning.unknowns.length === 0
+    ) {
+      response.push('');
+      response.push(
+        `J'ai identifié ta question : "${message}".`,
+      );
+    }
+
+    return response.join('\n');
   }
 
   /*
@@ -334,6 +469,7 @@ export class BrainService {
         return this.handleQuestion(
           message,
           context,
+          reasoning,
         );
 
       default:
@@ -525,7 +661,7 @@ export class BrainService {
     if (reasoning.unknowns.length > 0) {
       response.push('');
       response.push(
-        'Point encore à préciser :',
+        'Point encore à préciser:',
       );
 
       for (const unknown of reasoning.unknowns) {
