@@ -4,6 +4,7 @@ import { MemoryModule } from '../memory/memory.module';
 import { ContextModule } from '../context/context.module';
 import { RequirementsModule } from '../requirements/requirements.module';
 import { ReasoningModule } from '../reasoning/reasoning.module';
+import { CognitiveCoreModule } from '../core/cognitive/cognitive-core.module';
 
 import { BrainService } from './services/brain.service';
 
@@ -18,6 +19,7 @@ import { BrainDecisionModule } from './decisions/brain-decision.module';
     ReasoningModule,
     IntentModule,
     BrainDecisionModule,
+    CognitiveCoreModule,
   ],
   providers: [
     BrainService,

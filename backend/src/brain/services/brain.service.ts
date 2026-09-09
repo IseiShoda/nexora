@@ -9,6 +9,8 @@ import { RequirementService } from '../../requirements/requirement.service';
 import { ReasoningService } from '../../reasoning/services/reasoning.service';
 import { ReasoningResult } from '../../reasoning/interfaces/reasoning.interface';
 
+import { CognitiveCoreService } from '../../core/cognitive/cognitive-core.service';
+
 import { IntentService } from '../intents/intent.service';
 import { BrainIntent } from '../intents/intent.interface';
 
@@ -24,12 +26,40 @@ export class BrainService {
     private readonly decisionService: BrainDecisionService,
     private readonly requirementService: RequirementService,
     private readonly reasoningService: ReasoningService,
+    private readonly cognitiveCoreService: CognitiveCoreService,
   ) {}
 
   async think(
     message: string,
     conversationId: number,
   ): Promise<string> {
+
+    /*
+     * =========================================================
+     * 0. COGNITIVE CORE — SHADOW MODE
+     * =========================================================
+     *
+     * Le Cognitive Core entre maintenant dans le flux réel
+     * du Brain.
+     *
+     * Pour cette étape, il n'est pas encore responsable
+     * de la réponse finale.
+     *
+     * Le pipeline historique continue donc à fonctionner
+     * normalement après cette analyse.
+     */
+
+    const cognitiveOutput =
+      await this.cognitiveCoreService.process({
+        message,
+        conversationId: String(conversationId),
+      });
+
+    console.log(
+      '[BRAIN] Cognitive Core:',
+      cognitiveOutput,
+    );
+
     /*
      * =========================================================
      * 1. INTENT
@@ -263,7 +293,7 @@ export class BrainService {
 
     /*
      * =======================================================
-     * REQUIREMENT STORAGE
+     * ENREGISTREMENT
      * =======================================================
      */
 
@@ -279,34 +309,20 @@ export class BrainService {
 
     /*
      * =======================================================
-     * EXISTING REQUIREMENT
-     * =======================================================
-     */
-
-    if (!saved.created) {
-      return this.buildExistingRequirementResponse(
-        project,
-        saved.requirement.requirement,
-        reasoning,
-      );
-    }
-
-    /*
-     * =======================================================
-     * NEW REQUIREMENT
+     * RÉPONSE ENRICHIE PAR LE REASONING
      * =======================================================
      */
 
     return this.buildRequirementResponse(
       project,
-      saved.requirement.requirement,
+      requirement,
       reasoning,
     );
   }
 
   /*
    * =========================================================
-   * NEW REQUIREMENT RESPONSE
+   * REQUIREMENT RESPONSE
    * =========================================================
    */
 
@@ -318,91 +334,7 @@ export class BrainService {
     const response: string[] = [];
 
     response.push(
-      `J'ai enregistré cette nouvelle exigence pour "${project}" : "${requirement}". 🧠`,
-    );
-
-    /*
-     * ---------------------------------------------------------
-     * INFERENCE
-     * ---------------------------------------------------------
-     */
-
-    if (reasoning.inferences.length > 0) {
-      response.push('');
-      response.push('Ce que j\'en déduis :');
-
-      for (const inference of reasoning.inferences) {
-        response.push(
-          `• ${inference.content}`,
-        );
-      }
-    }
-
-    /*
-     * ---------------------------------------------------------
-     * IMPLICATIONS
-     * ---------------------------------------------------------
-     */
-
-    if (reasoning.implications.length > 0) {
-      response.push('');
-      response.push('Implications identifiées :');
-
-      for (const implication of reasoning.implications) {
-        response.push(
-          `• ${implication.content}`,
-        );
-      }
-    }
-
-    /*
-     * ---------------------------------------------------------
-     * UNKNOWN
-     * ---------------------------------------------------------
-     */
-
-    if (reasoning.unknowns.length > 0) {
-      response.push('');
-      response.push('Point encore à préciser :');
-
-      for (const unknown of reasoning.unknowns) {
-        response.push(
-          `• ${unknown.content}`,
-        );
-      }
-    }
-
-    /*
-     * ---------------------------------------------------------
-     * QUESTION
-     * ---------------------------------------------------------
-     */
-
-    if (reasoning.questions.length > 0) {
-      response.push('');
-      response.push(
-        `Question : ${reasoning.questions[0]}`,
-      );
-    }
-
-    return response.join('\n');
-  }
-
-  /*
-   * =========================================================
-   * EXISTING REQUIREMENT RESPONSE
-   * =========================================================
-   */
-
-  private buildExistingRequirementResponse(
-    project: string,
-    requirement: string,
-    reasoning: ReasoningResult,
-  ): string {
-    const response: string[] = [];
-
-    response.push(
-      `Cette exigence existe déjà pour "${project}" : "${requirement}". 🧠`,
+      `J'ai enregistré cette exigence pour "${project}" : "${requirement}". 🧠`,
     );
 
     /*
@@ -532,8 +464,7 @@ export class BrainService {
   private cleanRequirement(
     message: string,
   ): string {
-    let requirement =
-      message.trim();
+    let requirement = message.trim();
 
     /*
      * Supprime les pronoms / connecteurs utilisés
@@ -551,30 +482,27 @@ export class BrainService {
      * -> "doit être sécurisée"
      */
 
-    requirement =
-      requirement.replace(
-        /^(et\s+)?(il|elle|ça|cela)\s+/i,
-        '',
-      );
+    requirement = requirement.replace(
+      /^(et\s+)?(il|elle|ça|cela)\s+/i,
+      '',
+    );
 
     /*
      * Supprime "que" en début de phrase.
      */
 
-    requirement =
-      requirement.replace(
-        /^que\s+/i,
-        '',
-      );
+    requirement = requirement.replace(
+      /^que\s+/i,
+      '',
+    );
 
     /*
      * Nettoyage des espaces.
      */
 
-    requirement =
-      requirement
-        .replace(/\s+/g, ' ')
-        .trim();
+    requirement = requirement
+      .replace(/\s+/g, ' ')
+      .trim();
 
     return requirement;
   }
