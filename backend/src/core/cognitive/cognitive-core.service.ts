@@ -158,14 +158,15 @@ export class CognitiveCoreService {
      * 6. EXECUTION PLAN
      * =========================================================
      *
-     * Le Cognitive Core transforme maintenant sa décision
+     * Le Cognitive Core transforme sa décision
      * abstraite en directive d'exécution explicite.
      *
      * IMPORTANT :
-     * authority reste LEGACY_BRAIN.
+     * Le Cognitive Core est maintenant l'autorité
+     * de la décision et du plan d'exécution.
      *
-     * Le Cognitive Core décide.
-     * Le Brain historique exécute encore.
+     * BrainService reste responsable de l'exécution
+     * physique des handlers existants.
      */
 
     const execution =
@@ -327,13 +328,15 @@ export class CognitiveCoreService {
       strategy,
 
       /*
-       * Shadow Mode :
+       * Cognitive Authority :
        *
-       * Le Cognitive Core prend déjà la décision,
-       * mais le Brain historique reste responsable
-       * de l'exécution réelle.
+       * Le Cognitive Core est maintenant l'autorité
+       * qui produit la décision et le plan d'exécution.
+       *
+       * Le BrainService reste temporairement responsable
+       * de l'exécution physique des handlers.
        */
-      authority: 'LEGACY_BRAIN',
+      authority: 'COGNITIVE_CORE',
 
       intent:
         understanding.intent,
