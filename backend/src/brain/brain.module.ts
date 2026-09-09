@@ -7,9 +7,7 @@ import { ReasoningModule } from '../reasoning/reasoning.module';
 import { CognitiveCoreModule } from '../core/cognitive/cognitive-core.module';
 
 import { BrainService } from './services/brain.service';
-
 import { IntentModule } from './intents/intent.module';
-import { BrainDecisionModule } from './decisions/brain-decision.module';
 
 @Module({
   imports: [
@@ -18,7 +16,6 @@ import { BrainDecisionModule } from './decisions/brain-decision.module';
     RequirementsModule,
     ReasoningModule,
     IntentModule,
-    BrainDecisionModule,
     CognitiveCoreModule,
   ],
   providers: [
